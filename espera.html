@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actualizando Sistema - Campos del Sur II</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: #333; }
+        .card { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%; }
+        .loader { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #timer { font-size: 48px; font-weight: bold; color: #2c3e50; margin: 10px 0; }
+        .status { color: #27ae60; font-weight: bold; display: none; }
+        .btn-back { display: none; margin-top: 20px; padding: 12px 25px; background: #2980b9; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div id="loading-content">
+            <h2>Actualizando Plano</h2>
+            <p>Estamos procesando los datos de terreno. Por favor, espere...</p>
+            <div class="loader"></div>
+            <div id="timer">60</div>
+            <p style="font-size: 12px; color: #7f8c8d;">Segundos restantes</p>
+        </div>
+
+        <div id="finished-content" style="display:none;">
+            <h2 style="color: #27ae60;">¡Proceso Iniciado!</h2>
+            <p>El servidor ha recibido la orden y está generando el nuevo mapa.</p>
+            <p><b>Nota:</b> El cambio puede tardar hasta 1 minuto en reflejarse.</p>
+            <a href="index.html" class="btn-back" id="btn-back">Volver al Inicio</a>
+        </div>
+    </div>
+
+    <script>
+        // 1. DISPARAR EL WEBHOOK AUTOMÁTICAMENTE AL ENTRAR
+        const WEBHOOK_URL = "https://hook.us2.make.com/14e1encam4o8ftaqr7kghvsi3wvzudp1"; // <--- PEGA TU URL AQUÍ
+        
+        fetch(WEBHOOK_URL).catch(err => console.log("Enviado"));
+
+        // 2. CONTADOR
+        let timeLeft = 60;
+        const timerId = setInterval(() => {
+            if(timeLeft <= 0) {
+                clearInterval(timerId);
+                document.getElementById('loading-content').style.display = 'none';
+                document.getElementById('finished-content').style.display = 'block';
+                document.getElementById('btn-back').style.display = 'inline-block';
+            } else {
+                document.getElementById('timer').innerHTML = timeLeft;
+            }
+            timeLeft -= 1;
+        }, 1000);
+    </script>
+</body>
+</html>
