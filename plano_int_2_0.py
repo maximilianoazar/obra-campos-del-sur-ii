@@ -571,7 +571,18 @@ def obtener_color_estatico(avance, tiene_obs):
     if avance > 80: return "#36d278" # Verde
     if 30 <= avance <= 80: return "#409ad5" # Azul
     return "#d65548" # Rojo
+    
+def extraer_codigo_partida(partida_raw):
+    """
+    Extrae el código tipo C.EX.15 desde strings como:
+    '[C.EX.15] Proteccion Metalica Ventana'
+    """
+    if not partida_raw:
+        return None
 
+    match = re.search(r'\[([A-Z0-9\.]+)\]', partida_raw)
+    return match.group(1) if match else None
+    
 def partida_aplica(partida_raw, tipo_vivienda, manzana, casa):
     codigo = extraer_codigo_partida(partida_raw)
 
