@@ -572,6 +572,27 @@ def obtener_color_estatico(avance, tiene_obs):
     if 30 <= avance <= 80: return "#409ad5" # Azul
     return "#d65548" # Rojo
 
+def partida_aplica(partida_raw, tipo_vivienda, manzana, casa):
+    codigo = extraer_codigo_partida(partida_raw)
+
+    # Si no logramos identificar el código → NO filtramos
+    if not codigo:
+        return True
+
+    if codigo not in REGLAS_PARTIDAS:
+        return True
+
+    regla = REGLAS_PARTIDAS[codigo]
+
+    if tipo_vivienda in regla.get("tipos", set()):
+        return True
+
+    if "excepciones" in regla:
+        if (str(manzana), str(casa)) in regla["excepciones"]:
+            return True
+
+    return False
+
 def generar_html_popup(manzana, casa_num, detalles, tipo_vivienda, avance):
     detalles = [
         d for d in detalles
