@@ -41,7 +41,12 @@ jobs:
         # Como Folium busca rutas locales, necesitamos que plano.png esté junto al html.
         cp plano.png public/plano.png || echo "No hay plano.png"
 
-    - name: Publicar en GitHub Pages
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: gh-pages
+        folder: .
+        clean: false  # <--- ESTA LÍNEA ES LA CLAVE
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
