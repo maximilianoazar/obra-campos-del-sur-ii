@@ -44,10 +44,6 @@ jobs:
     - name: Deploy to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4
       with:
-        branch: gh-pages
-        folder: .
-        clean: false  # <--- ESTA LÍNEA ES LA CLAVE
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./public
+        branch: gh-pages # Rama de destino
+        folder: . # Sube los archivos de la raíz
+        clean: false # ¡ESTO EVITA QUE SE BORREN TU LOGO Y FONDO!
