@@ -1,6 +1,8 @@
 name: Actualizar Plano Obra
 
 on:
+  repository_dispatch: 
+    types: [webhook_update]
   schedule:
     - cron: '0 * * * *' # Se ejecuta cada hora
   workflow_dispatch:      # Permite ejecución manual
