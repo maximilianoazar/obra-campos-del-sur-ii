@@ -37,6 +37,7 @@ jobs:
         mkdir -p public
         # Copiamos los archivos base de la web
         cp index.html public/index.html
+        cp espera.html public/espera.html || echo "No hay espera.html"
         
         # COPIAR LOGO Y FONDO (Para que no desaparezcan)
         cp logo.png public/logo.png || echo "No se encontró logo.png"
