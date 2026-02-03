@@ -1,34 +1,48 @@
-name: Actualizar Mapa Interactivo
+name: Actualizar Plano Obra
 
 on:
   schedule:
-    - cron: '0 * * * *' # Cada hora
-  workflow_dispatch:      # Botón manual
+    - cron: '0 * * * *' # Se ejecuta cada hora en punto
+  workflow_dispatch: # Permite ejecución manual desde la pestaña Actions
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout del código
-        uses: actions/checkout@v3
+    - name: Checkout del código
+      uses: actions/checkout@v3
 
-      - name: Configurar Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+    - name: Instalar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
 
-      - name: Instalar dependencias
-        run: |
-          pip install opencv-python-headless numpy pandas gspread google-auth folium openpyxl matplotlib branca google-api-python-client
+    - name: Instalar librerías
+      run: |
+        pip install -r requirements.txt
 
-      - name: Ejecutar script de generación
-        env:
-          GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
-        run: python plano_int_2_0.py
+    - name: Ejecutar script de generación
+      env:
+        GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
+      run: python plano_int_2_0.py
 
-      - name: Desplegar a GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: .
-          clean: false # Mantiene tus fotos y el index.html
+    - name: Mover archivos a carpeta pública
+      run: |
+        mkdir -p public
+        cp index.html public/index.html
+        # Si el script genera mapa_generado.html, lo movemos
+        cp mapa_generado.html public/mapa_generado.html || echo "No se generó mapa"
+        # Si necesitas la imagen del plano para mostrarla en el mapa (Overlay)
+        # Asegúrate de que el script baje 'plano.png' y Folium lo use. 
+        # Como Folium busca rutas locales, necesitamos que plano.png esté junto al html.
+        cp plano.png public/plano.png || echo "No hay plano.png"
+
+    - name: Publicar en GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public
