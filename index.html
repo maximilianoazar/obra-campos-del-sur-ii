@@ -5,21 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Control - Campos del Sur II</title>
     <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        /* CONFIGURACIÓN DEL FONDO DE OBRA */
+        body, html { height: 100%; margin: 0; font-family: 'Segoe UI', sans-serif; }
+        
         .bg-image {
-            /* Aquí busca la imagen llamada 'fondo.jpg' que debes subir al repo */
             background-image: url('fondo.jpg'); 
-            
-            /* Si no has subido imagen aun, usa este color gris de respaldo */
-            background-color: #cccccc; 
-            
-            /* Estilos para que la imagen cubra toda la pantalla */
+            background-color: #333; 
             height: 100%;
             background-position: center;
             background-repeat: no-repeat;
@@ -27,105 +17,109 @@
             position: relative;
         }
 
-        /* CAPA OSCURA PARA QUE SE LEA EL TEXTO */
         .overlay {
-            background-color: rgba(0, 0, 0, 0.5); /* Oscurece la foto al 50% */
+            background-color: rgba(0, 0, 0, 0.6);
             height: 100%;
             width: 100%;
-            display: flex; /* Esto activa el centrado perfecto */
-            justify-content: center; /* Centrado Horizontal */
-            align-items: center; /* Centrado Vertical */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
 
-        /* TARJETA BLANCA */
         .container {
             background: white;
-            padding: 50px 40px;
+            padding: 40px;
             border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
             text-align: center;
             max-width: 450px;
             width: 90%;
         }
 
-        h1 {
-            color: #2c3e50;
-            font-size: 28px;
-            margin: 15px 0 5px 0;
+        /* LOGO COMO BOTÓN */
+        .logo-link {
+            display: inline-block;
+            transition: transform 0.2s;
+            margin-bottom: 10px;
         }
+        .logo-link:hover { transform: scale(1.05); }
+        .logo-img { max-width: 180px; height: auto; }
 
-        p.subtitle {
-            color: #7f8c8d;
-            font-size: 16px;
-            margin-bottom: 35px;
-            font-weight: 500;
-        }
+        h1 { color: #2c3e50; margin: 10px 0; font-size: 26px; }
+        .subtitle { color: #7f8c8d; margin-bottom: 30px; }
 
-        /* ESTILO DEL BOTÓN PRINCIPAL */
         .btn {
             display: block;
             width: 100%;
-            padding: 18px;
-            border: none;
+            padding: 15px;
+            margin: 12px 0;
             border-radius: 8px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            cursor: pointer;
             text-decoration: none;
-            transition: all 0.3s ease;
-            box-sizing: border-box; /* Asegura que el padding no deforme el ancho */
+            transition: all 0.3s;
+            box-sizing: border-box;
         }
 
-        .btn-primary {
-            background-color: #2980b9;
-            color: white;
-            box-shadow: 0 4px 6px rgba(41, 128, 185, 0.3);
-        }
+        .btn-primary { background: #2980b9; color: white; }
+        .btn-primary:hover { background: #3498db; }
 
-        .btn-primary:hover {
-            background-color: #3498db;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(41, 128, 185, 0.4);
+        .btn-outline { 
+            background: transparent; 
+            border: 2px solid #27ae60; 
+            color: #27ae60; 
         }
+        .btn-outline:hover { background: #27ae60; color: white; }
 
-        /* ESTILO DEL TEXTO INFORMATIVO (PIE DE PAGINA) */
-        .info-text {
-            margin-top: 30px;
-            font-size: 15px;
-            color: #27ae60; /* Verde para indicar que el sistema está "vivo" */
-            background-color: #eafaf1;
+        /* AVISO DE ACTUALIZACIÓN AUTOMÁTICA */
+        .info-box {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #2c3e50;
+            background: #f8f9fa;
             padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #d5f5e3;
-            font-weight: 600;
+            border-radius: 6px;
+            border-left: 4px solid #2980b9;
         }
 
-        .logo-img {
-            max-width: 180px;
-            height: auto;
-            margin-bottom: 10px;
+        /* AVISO PROFESIONAL CTRL+F5 */
+        .alert-refresh {
+            margin-top: 25px;
+            padding: 12px;
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.4;
         }
-
     </style>
 </head>
 <body>
-
     <div class="bg-image">
         <div class="overlay">
             <div class="container">
-                <img src="logo.png" alt="Logo Constructora" class="logo-img">
+                <a href="https://cimol.cl/" class="logo-link" title="Visitar sitio web">
+                    <img src="logo.png" alt="Logo" class="logo-img">
+                </a>
                 
                 <h1>Control de Avance</h1>
-                <p class="subtitle">Proyecto Campos del Sur II</p>
+                <p class="subtitle">Obra Campos del Sur II</p>
                 
-                <a href="mapa_generado.html" class="btn btn-primary">📍 Abrir Plano Interactivo</a>
+                <a href="mapa_generado.html" class="btn btn-primary">📍 Abrir Avance</a>
                 
-                <div class="info-text">
-                    🔄 El sistema se actualiza automáticamente cada hora.
+                <a href="https://github.com/TU_USUARIO/TU_REPOSITORIO" class="btn btn-outline">🔄 Actualización Manual de Datos</a>
+                
+                <div class="info-box">
+                    Sincronización automática activa (cada 1 hora).
+                </div>
+
+                <div class="alert-refresh">
+                    <strong>💡 Recomendación:</strong> Si los cambios recientes no aparecen en el plano, presione <b>Ctrl + F5</b> en su teclado para refrescar la memoria del navegador.
                 </div>
             </div>
         </div>
     </div>
-
 </body>
 </html>
