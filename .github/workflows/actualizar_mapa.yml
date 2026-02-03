@@ -2,8 +2,8 @@ name: Actualizar Plano Obra
 
 on:
   schedule:
-    - cron: '0 * * * *' # Se ejecuta cada hora en punto
-  workflow_dispatch: # Permite ejecución manual desde la pestaña Actions
+    - cron: '0 * * * *' # Se ejecuta cada hora
+  workflow_dispatch:      # Permite ejecución manual
 
 permissions:
   contents: write
@@ -30,15 +30,18 @@ jobs:
         GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
       run: python plano_int_2_0.py
 
-    - name: Mover archivos a carpeta pública
+    - name: Preparar carpeta pública
       run: |
         mkdir -p public
+        # Copiamos los archivos base de la web
         cp index.html public/index.html
-        # Si el script genera mapa_generado.html, lo movemos
+        
+        # COPIAR LOGO Y FONDO (Para que no desaparezcan)
+        cp logo.png public/logo.png || echo "No se encontró logo.png"
+        cp fondo.jpg public/fondo.jpg || echo "No se encontró fondo.jpg"
+        
+        # Copiamos los resultados del script
         cp mapa_generado.html public/mapa_generado.html || echo "No se generó mapa"
-        # Si necesitas la imagen del plano para mostrarla en el mapa (Overlay)
-        # Asegúrate de que el script baje 'plano.png' y Folium lo use. 
-        # Como Folium busca rutas locales, necesitamos que plano.png esté junto al html.
         cp plano.png public/plano.png || echo "No hay plano.png"
 
     - name: Publicar en GitHub Pages
@@ -46,3 +49,5 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./public
+        # Con peaceiris, 'keep_files: false' es seguro aquí porque 
+        # estamos reconstruyendo la carpeta 'public' completa cada vez.
