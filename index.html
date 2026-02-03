@@ -3,40 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Control - Campos del Sur</title>
+    <title>Panel de Control - Campos del Sur II</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%; }
-        h1 { color: #2c3e50; font-size: 24px; margin-bottom: 10px; }
-        p { color: #7f8c8d; margin-bottom: 30px; }
-        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; text-decoration: none; transition: all 0.3s ease; }
-        .btn-primary { background-color: #2980b9; color: white; }
-        .btn-primary:hover { background-color: #2471a3; transform: translateY(-2px); }
-        .btn-secondary { background-color: #27ae60; color: white; }
-        .btn-secondary:hover { background-color: #219150; transform: translateY(-2px); }
-        .footer { margin-top: 20px; font-size: 12px; color: #bdc3c7; }
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* CONFIGURACIÓN DEL FONDO DE OBRA */
+        .bg-image {
+            /* Aquí busca la imagen llamada 'fondo.jpg' que debes subir al repo */
+            background-image: url('fondo.jpg'); 
+            
+            /* Si no has subido imagen aun, usa este color gris de respaldo */
+            background-color: #cccccc; 
+            
+            /* Estilos para que la imagen cubra toda la pantalla */
+            height: 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: relative;
+        }
+
+        /* CAPA OSCURA PARA QUE SE LEA EL TEXTO */
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.5); /* Oscurece la foto al 50% */
+            height: 100%;
+            width: 100%;
+            display: flex; /* Esto activa el centrado perfecto */
+            justify-content: center; /* Centrado Horizontal */
+            align-items: center; /* Centrado Vertical */
+        }
+
+        /* TARJETA BLANCA */
+        .container {
+            background: white;
+            padding: 50px 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin: 15px 0 5px 0;
+        }
+
+        p.subtitle {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-bottom: 35px;
+            font-weight: 500;
+        }
+
+        /* ESTILO DEL BOTÓN PRINCIPAL */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-sizing: border-box; /* Asegura que el padding no deforme el ancho */
+        }
+
+        .btn-primary {
+            background-color: #2980b9;
+            color: white;
+            box-shadow: 0 4px 6px rgba(41, 128, 185, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(41, 128, 185, 0.4);
+        }
+
+        /* ESTILO DEL TEXTO INFORMATIVO (PIE DE PAGINA) */
+        .info-text {
+            margin-top: 30px;
+            font-size: 15px;
+            color: #27ae60; /* Verde para indicar que el sistema está "vivo" */
+            background-color: #eafaf1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #d5f5e3;
+            font-weight: 600;
+        }
+
+        .logo-img {
+            max-width: 180px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
     </style>
 </head>
 <body>
-    <div class="container">
-        <img src="https://via.placeholder.com/150x80?text=CONSTRUCTORA" alt="Logo" style="margin-bottom: 20px;">
-        <h1>Control de Avance</h1>
-        <p>Proyecto Campos del Sur II</p>
-        
-        <a href="mapa_generado.html" class="btn btn-primary">📍 Abrir Plano Interactivo</a>
-        
-        <button onclick="checkUpdate()" class="btn btn-secondary">🔄 Actualizar Datos</button>
-        
-        <div class="footer">
-            El sistema se actualiza automáticamente cada hora.
+
+    <div class="bg-image">
+        <div class="overlay">
+            <div class="container">
+                <img src="logo.png" alt="Logo Constructora" class="logo-img">
+                
+                <h1>Control de Avance</h1>
+                <p class="subtitle">Proyecto Campos del Sur II</p>
+                
+                <a href="mapa_generado.html" class="btn btn-primary">📍 Abrir Plano Interactivo</a>
+                
+                <div class="info-text">
+                    🔄 El sistema se actualiza automáticamente cada hora.
+                </div>
+            </div>
         </div>
     </div>
 
-    <script>
-        function checkUpdate() {
-            alert("Solicitud enviada. Los datos de Drive se están procesando. Por favor, abre el plano en 1 minuto.");
-            // Opcional: Aquí podrías redirigir a la pestaña Actions de GitHub si tus jefes tienen cuenta
-        }
-    </script>
 </body>
 </html>
