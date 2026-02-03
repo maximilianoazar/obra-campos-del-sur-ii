@@ -573,67 +573,180 @@ def obtener_color_estatico(avance, tiene_obs):
     return "#d65548" # Rojo
 
 def generar_html_popup(manzana, casa_num, detalles, tipo_vivienda, avance):
-    # Filtrar detalles para el popup también
-    detalles_popup = []
+    detalles = [
+        d for d in detalles
+        if partida_aplica(
+            d.get("partida"),
+            tipo_vivienda,
+            manzana,
+            casa_num
+        )
+    ]
+
     for d in detalles:
-        match = re.search(r'\[(.*?)\]', d['partida'])
-        codigo = match.group(1).strip() if match else ""
-        if partida_aplica_a_vivienda(codigo, tipo_vivienda, manzana, casa_num):
-            detalles_popup.append(d)
+        if not partida_aplica(d.get("partida"), tipo_vivienda, manzana, casa_num):
+            print("FILTRADA:", manzana, casa_num, d.get("partida"))
 
     resumen = {}
-    for d in detalles_popup:
+    for d in detalles:
         t, s = d['titulo'], d['subtitulo']
-        if t not in resumen: resumen[t] = {'total': 0, 'listo': 0, 'subs': {}, 'obs': False}
+        if t not in resumen:
+            resumen[t] = {'total': 0, 'listo': 0, 'subs': {}, 'obs': False}
         resumen[t]['total'] += 1
-        if d['estado'] == "✅": resumen[t]['listo'] += 1
-        if d.get('tiene_obs'): resumen[t]['obs'] = True
+        if d['estado'] == "✅":
+            resumen[t]['listo'] += 1
+        if d.get('tiene_obs'):
+            resumen[t]['obs'] = True
         if s:
-            if s not in resumen[t]['subs']: resumen[t]['subs'][s] = {'total': 0, 'listo': 0, 'obs': False}
+            if s not in resumen[t]['subs']:
+                resumen[t]['subs'][s] = {'total': 0, 'listo': 0, 'obs': False}
             resumen[t]['subs'][s]['total'] += 1
-            if d['estado'] == "✅": resumen[t]['subs'][s]['listo'] += 1
-            if d.get('tiene_obs'): resumen[t]['subs'][s]['obs'] = True
+            if d['estado'] == "✅":
+                resumen[t]['subs'][s]['listo'] += 1
+            if d.get('tiene_obs'):
+                resumen[t]['subs'][s]['obs'] = True
 
     html = f"""
     <div style="font-family: 'Segoe UI', Arial; width: 520px; background: white; margin: -15px -10px -10px -10px;">
         <div style="background: #2c3e50; color: white; padding: 15px 10px; display: flex; justify-content: space-between; align-items: center;">
-            <h4 style="margin: 0; font-size: 16px;">MZ {manzana} - Casa {casa_num} - {tipo_vivienda}</h4>
+            <h4 style="margin: 0; font-size: 16px;">
+                MZ {manzana} - Casa {casa_num} - {tipo_vivienda}
+            </h4>
             <div style="width: 160px;">
-                <div style="font-size: 12px; font-weight: bold; text-align: right;">{avance}%</div>
-                <div style="background: #dcdde1; border-radius: 6px; height: 8px; overflow: hidden;">
-                    <div style="width: {avance}%; height: 100%; background: linear-gradient(90deg, #2980b9, #27ae60);"></div>
+                <div style="font-size: 12px; font-weight: bold; text-align: right;">
+                    {avance}%
+                </div>
+                <div style="background: #dcdde1; border-radius: 6px;
+                            height: 8px; overflow: hidden;">
+                    <div style="
+                        width: {avance}%;
+                        height: 100%;
+                        background: linear-gradient(90deg, #2980b9, #27ae60);
+                    "></div>
                 </div>
             </div>
         </div>
+
         <div style="display: flex; height: 380px;">
             <div style="flex: 1.8; overflow-y: auto; padding: 10px; border-right: 1px solid #eee;" id="lista_partidas">
                 <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
-                    <colgroup><col style="width: 85%;"><col style="width: 15%;"></colgroup>
+                    <colgroup>
+                        <col style="width: 85%;">
+                        <col style="width: 15%;">
+                    </colgroup>
     """
 
     current_tit, current_sub = None, None
-    for item in detalles_popup:
+    for item in detalles:
         if item['titulo'] != current_tit:
             current_tit = item['titulo']
-            html += f'<tr style="background: #edeff0;"><td colspan="2" style="padding: 10px 5px; font-weight: bold; color: #2c3e50; border-top: 2px solid #2c3e50;">{current_tit.upper()}</td></tr>'
+            anchor_tit = f"tit_{hash(current_tit)}"
+            html += f"""
+            <tr id="{anchor_tit}" style="background: #edeff0;">
+                <td colspan="2" style="padding: 10px 5px; font-weight: bold;
+                    color: #2c3e50; border-top: 2px solid #2c3e50;">
+                    {current_tit.upper()}
+                </td>
+            </tr>
+            """
+
         if item['subtitulo'] != current_sub:
             current_sub = item['subtitulo']
             if current_sub:
-                html += f'<tr style="background: #f9f9f9;"><td colspan="2" style="padding: 6px 8px; font-weight: bold; color: #7f8c8d; font-style: italic; border-bottom: 1px solid #eee;">↳ {current_sub}</td></tr>'
+                anchor_sub = f"sub_{hash(current_sub)}"
+                html += f"""
+                <tr id="{anchor_sub}" style="background: #f9f9f9;">
+                    <td colspan="2" style="padding: 6px 8px; font-weight: bold;
+                        color: #7f8c8d; font-style: italic; border-bottom: 1px solid #eee;">
+                        ↳ {current_sub}
+                    </td>
+                </tr>
+                """
 
         if item.get('tiene_obs'):
-            color_st = "#d4a017"; icono = "⚠️"
+            color_st = "#d4a017"
+            icono_mostrado = "⚠️"
             comentario = item.get("comentario", "Sin detalle")
-            nombre = f'<div style="padding: 2px 0;"><b style="color: #d4a017;">{item["partida"]}</b><details style="margin-top: 4px;"><summary style="cursor: pointer; color: #856404; font-size: 10px; font-weight: bold;">Ver nota [+]</summary><div style="margin-top: 4px; padding: 8px; background: #fff9e6; border-left: 3px solid #d4a017; color: #856404; font-size: 10px;">{comentario}</div></details></div>'
+            nombre_partida = f"""
+            <div style="padding: 2px 0;">
+                <b style="color: #d4a017;">{item['partida']}</b>
+                <details style="margin-top: 4px;">
+                    <summary style="cursor: pointer; color: #856404;
+                        font-size: 10px; font-weight: bold; outline: none;">
+                        Ver nota [+]
+                    </summary>
+                    <div style="margin-top: 4px; padding: 8px; background: #fff9e6;
+                        border-left: 3px solid #d4a017; color: #856404;
+                        font-size: 10px; line-height: 1.4;">
+                        {comentario}
+                    </div>
+                </details>
+            </div>
+            """
         else:
-            color_st = "#27ae60" if item['estado'] == "✅" else "#e74c3c"; icono = item['estado']
-            nombre = f"<span style='color: #444; font-size: 11px;'>{item['partida']}</span>"
-        
-        html += f'<tr style="border-bottom: 1px solid #f2f2f2;"><td style="padding: 8px 10px; vertical-align: top;">{nombre}</td><td style="padding: 8px 5px; text-align: center; color: {color_st}; font-weight: bold; font-size: 14px;">{icono}</td></tr>'
-    
-    html += "</table></div>"
-    # (Omitimos el índice lateral para simplificar código, pero los datos están ahí)
-    html += "</div></div>"
+            color_st = "#27ae60" if item['estado'] == "✅" else "#e74c3c"
+            icono_mostrado = item['estado']
+            nombre_partida = f"""
+            <span style='color: #444; font-size: 11px;'>
+                {item['partida']}
+            </span>
+            """
+
+        html += f"""
+        <tr style="border-bottom: 1px solid #f2f2f2;">
+            <td style="padding: 8px 10px; vertical-align: top;">
+                {nombre_partida}
+            </td>
+            <td style="padding: 8px 5px; text-align: center;
+                color: {color_st}; font-weight: bold; font-size: 14px;">
+                {icono_mostrado}
+            </td>
+        </tr>
+        """
+
+    html += """</table></div>
+        <div style="flex: 1.2; background: #f4f7f8; padding: 10px;
+            overflow-y: auto; border-left: 1px solid #ddd;">
+            <div style="font-size: 11px; font-weight: bold; color: #95a5a6;
+                margin-bottom: 10px; text-align: center;
+                border-bottom: 1px solid #ccc; padding-bottom: 5px;">
+                ÍNDICE DE CONTROL
+            </div>
+    """
+
+    for tit, datos in resumen.items():
+        anchor_tit = f"tit_{hash(tit)}"
+        bg_tit = "#fff3cd" if datos['obs'] else "#fff"
+        html += f"""
+        <div onclick="document.getElementById('{anchor_tit}')
+                .scrollIntoView({{behavior:'smooth'}})"
+            style="cursor: pointer; padding: 6px; background: {bg_tit};
+            border: 1px solid #dcdde1; border-radius: 4px; margin-bottom: 4px;">
+            <div style="font-weight: bold; color: #2c3e50; font-size: 10px;">
+                {tit}
+            </div>
+            <div style="font-size: 9px;
+                color: {'#856404' if datos['obs'] else '#27ae60'};">
+                {datos['listo']}/{datos['total']} completados
+            </div>
+        </div>
+        """
+
+        for subtit, sdatos in datos['subs'].items():
+            anchor_sub = f"sub_{hash(subtit)}"
+            estilo_s = "color:#856404;font-weight:bold;" if sdatos['obs'] else "color:#636e72;"
+            html += f"""
+            <div onclick="document.getElementById('{anchor_sub}')
+                    .scrollIntoView({{behavior:'smooth'}})"
+                style="cursor:pointer; padding:4px 6px 4px 15px;
+                margin-bottom:3px; border-left:2px solid
+                {'#f1c40f' if sdatos['obs'] else '#bdc3c7'};
+                font-size:9px; {estilo_s}">
+                {subtit} {'(!)' if sdatos['obs'] else ''}
+            </div>
+            """
+
+    html += "</div></div></div>"
     return html
 
 for i, geo in enumerate(casas_geometria):
