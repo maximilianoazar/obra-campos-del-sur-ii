@@ -1,91 +1,139 @@
 # -*- coding: utf-8 -*-
 import os
-import json
-import re
+import json  # Agregado para procesar el secreto JSON
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 import pandas as pd
+import re
 import gspread
 import folium
-import unicodedata
-from collections import defaultdict
-from matplotlib import pyplot as plt
 from branca.element import Template, MacroElement
+from collections import defaultdict
+import unicodedata
 
-# ==========================================
-# 1. CONFIGURACIÓN Y AUTENTICACIÓN
-# ==========================================
+# ========================================================
+# CONFIGURACIÓN INICIAL (ADAPTADO PARA GITHUB)
+# ========================================================
 
-try:
-    if "GDRIVE_CREDENTIALS" in os.environ:
-        print("🔑 Cargando credenciales desde Variable de Entorno (GitHub)...")
-        creds_dict = json.loads(os.environ["GDRIVE_CREDENTIALS"])
-        gc = gspread.service_account_from_dict(creds_dict)
-    else:
-        print("💻 Buscando archivo 'credentials.json' localmente...")
-        gc = gspread.service_account(filename="credentials.json")
-except Exception as e:
-    print(f"❌ Error de autenticación: {e}")
-    exit()
+# 1. ELIMINADO: drive.mount('/content/drive') -> Genera incompatibilidad en GitHub.
+# 2. ELIMINADO: Cambio de directorio con os.chdir. Se asume que el script corre en la raíz.
 
-# Cargar imagen
-archivo_plano = 'plano.png'
-if not os.path.exists(archivo_plano):
-    print(f"❌ No se encontró {archivo_plano} en el directorio actual.")
-    exit()
+print(f"Directorio de trabajo actual: {os.getcwd()}")
+print("Archivos encontrados:", os.listdir())
 
-img = cv2.imread(archivo_plano)
+# 1. Cargar la imagen
+# Se asume que plano.png está en la raíz del repositorio
+img = cv2.imread('plano.png')
+
+if img is None:
+    raise FileNotFoundError("❌ Error: No se encontró 'plano.png'. Asegúrate de que está en el repositorio.")
+
 h, w, _ = img.shape
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-# ==========================================
-# 2. DETECCIÓN DE VIVIENDAS (OPENCV)
-# ==========================================
-
+# 2. Umbralización para detectar bloques negros
 _, thresh = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY_INV)
+
+# 3. Limpieza de ruido
 kernel = np.ones((3,3), np.uint8)
 opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+
+# 4. Encontrar contornos
 contours, _ = cv2.findContours(opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 casas_geometria = []
-centroides = []
+debug_img = img.copy()
 
 def pixel_to_folium(pt, h):
     px_x, px_y = pt
+    # latitud = Altura_Total - pixel_y (esto invierte el eje para Folium)
+    # longitud = pixel_x
     lat = float(h - px_y)
     lng = float(px_x)
     return [lng, lat]
 
-index_geo = 0
+centroides_casas = []
+
 for cnt in contours:
     area = cv2.contourArea(cnt)
     perimetro = cv2.arcLength(cnt, True)
+
     if perimetro == 0: continue
+
+    # Circularidad para descartar líneas
     circularidad = (4 * np.pi * area) / (perimetro ** 2)
 
+    # Filtros de área y forma
     if 200 < area < 4000 and circularidad > 0.4:
         epsilon = 0.03 * perimetro
         approx = cv2.approxPolyDP(cnt, epsilon, True)
+
         if 4 <= len(approx) <= 10:
+            cv2.drawContours(debug_img, [approx], -1, (0, 255, 0), 2)
+
             M = cv2.moments(cnt)
             if M["m00"] != 0:
-                cx = M["m10"] / M["m00"]
-                cy = M["m01"] / M["m00"]
-                
-                coords = []
-                for pt in approx:
-                    coords.append(pixel_to_folium((float(pt[0][0]), float(pt[0][1])), h))
-                coords.append(coords[0])
-                casas_geometria.append(coords)
-                
-                centroides.append({"idx": index_geo, "cx": cx, "cy": cy})
-                index_geo += 1
+              cx = M["m10"] / M["m00"]
+              cy = M["m01"] / M["m00"]
+              centroides_casas.append((cx, cy))
 
-print(f"🏠 Viviendas detectadas: {len(casas_geometria)}")
+            # --- CORRECCIÓN CLAVE PARA FOLIUM ---
+            coords = []
+            for pt in approx:
+              px_x = float(pt[0][0])
+              px_y = float(pt[0][1])
+              coords.append(pixel_to_folium((px_x, px_y), h))
 
-# ==========================================
-# 3. LÓGICA DE MANZANAS Y ORDENAMIENTO
-# ==========================================
+            coords.append(coords[0]) # Cerrar polígono
+            casas_geometria.append(coords)
+
+print(f"ÉXITO: Se detectaron {len(casas_geometria)} viviendas.")
+
+# Visualización de Debug
+# COMENTADO: plt.show() detiene la ejecución en servidores/GitHub Actions
+# plt.figure(figsize=(15, 7))
+# plt.imshow(cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB))
+# plt.title("Detección de Viviendas (Verde)")
+# plt.axis('off')
+# plt.show()
+
+centroides = []
+
+for i, geo in enumerate(casas_geometria):
+    xs = [p[0] for p in geo[:-1]]
+    ys = [p[1] for p in geo[:-1]]
+
+    cx = sum(xs) / len(xs)
+    cy_mapa = sum(ys) / len(ys)
+
+    # --- CORRECCIÓN ---
+    cy_pixel = h - cy_mapa
+
+    centroides.append({
+        "idx": i,
+        "cx": cx,
+        "cy": cy_pixel # Usamos la coordenada de pixel para la lógica
+    })
+
+# =========================
+# 1. ESTRUCTURA DE CASAS
+# =========================
+
+casas = []
+
+for c in centroides:
+    casas.append({
+        "idx": c["idx"],
+        "cx": c["cx"],
+        "cy": c["cy"],
+        "geometry": casas_geometria[c["idx"]]
+    })
+
+
+# =========================
+# 2. DEFINICIÓN DE MANZANAS
+# =========================
 
 MANZANAS = {
     "A": lambda x,y: x > 1400 and y < 500,
@@ -102,153 +150,769 @@ MANZANAS = {
     "L": lambda x,y: x <= 215 and 550 <= y < 750
 }
 
-casas_por_manzana = defaultdict(list)
+
+# =========================
+# 3. ASIGNACIÓN CASA → MANZANA
+# =========================
+
 mapa_manzanas = {}
+casas_por_manzana = {}
+
+for casa in casas:
+    asignada = False
+
+    for manzana, condicion in MANZANAS.items():
+        if condicion(casa["cx"], casa["cy"]):
+            mapa_manzanas[casa["idx"]] = manzana
+            casas_por_manzana.setdefault(manzana, []).append(casa)
+            asignada = True
+            break
+
+    if not asignada:
+        mapa_manzanas[casa["idx"]] = "SIN"
+        casas_por_manzana.setdefault("SIN", []).append(casa)
+
+
+# DEBUG OPCIONAL
+for m, lst in casas_por_manzana.items():
+    print(f"Manzana {m}: {len(lst)} casas")
+
+total = sum(len(casas) for casas in casas_por_manzana.values())
+print(f"Total de casas asignadas: {total}")
+
+if "SIN_MANZANA" in casas_por_manzana:
+    print("⚠️ Casas sin manzana:")
+    for c in casas_por_manzana["SIN_MANZANA"]:
+        print(f"idx={c['idx']} cx={int(c['cx'])} cy={int(c['cy'])}")
+
+casas_por_manzana = defaultdict(list)
 
 for casa in centroides:
     x, y = casa["cx"], casa["cy"]
     asignada = False
+
     for letra, regla in MANZANAS.items():
         if regla(x, y):
             casas_por_manzana[letra].append(casa)
-            mapa_manzanas[casa["idx"]] = letra
             asignada = True
             break
-    if not asignada: mapa_manzanas[casa["idx"]] = "SIN"
 
-def agrupar_en_filas(casas, tol=25):
+    if not asignada:
+        casas_por_manzana["SIN_MANZANA"].append(casa)
+
+total = 0
+for m, casas in casas_por_manzana.items():
+    print(f"Manzana {m}: {len(casas)} casas")
+    total += len(casas)
+
+print("TOTAL:", total)
+
+# ========================================================
+# 1. FUNCIONES DE ORDENAMIENTO (ESTRUCTURA BASE)
+# ========================================================
+
+def agrupar_en_filas(casas, tolerancia=25):
     filas = []
     for c in sorted(casas, key=lambda x: x["cy"]):
         agregado = False
         for fila in filas:
-            if abs(fila[0]["cy"] - c["cy"]) < tol:
+            if abs(fila[0]["cy"] - c["cy"]) < tolerancia:
                 fila.append(c); agregado = True; break
         if not agregado: filas.append([c])
     return filas
 
+def ordenar_rectangular(casas):
+    filas = agrupar_en_filas(casas)
+    casas_ordenadas = []
+    for fila in filas:
+        fila_ordenada = sorted(fila, key=lambda c: c["cx"])
+        casas_ordenadas.extend(fila_ordenada)
+    return casas_ordenadas
+
+def ordenar_lineal(casas, modo):
+    if modo == "LR_T": return sorted(casas, key=lambda c: (c["cy"], c["cx"]))
+    if modo == "RL_T": return sorted(casas, key=lambda c: (c["cy"], -c["cx"]))
+    return casas
+
+def ordenar_perimetro(casas, es_especial=False):
+    if not casas: return []
+    min_x, max_x = min(c['cx'] for c in casas), max(c['cx'] for c in casas)
+    min_y, max_y = min(c['cy'] for c in casas), max(c['cy'] for c in casas)
+    tol = 30
+    muro_izq, muro_sup, muro_der, muro_inf = [], [], [], []
+    procesadas = set()
+
+    candidatos_izq = sorted([c for c in casas if c['cx'] < min_x + tol], key=lambda x: x['cy'], reverse=True)
+    for c in candidatos_izq: muro_izq.append(c); procesadas.add(c['idx'])
+
+    candidatos_sup = sorted([c for c in casas if c['cy'] < min_y + tol and c['idx'] not in procesadas], key=lambda x: x['cx'])
+    for c in candidatos_sup: muro_sup.append(c); procesadas.add(c['idx'])
+
+    candidatos_der = sorted([c for c in casas if c['cx'] > max_x - tol and c['idx'] not in procesadas], key=lambda x: x['cy'])
+    for c in candidatos_der: muro_der.append(c); procesadas.add(c['idx'])
+
+    candidatos_inf = sorted([c for c in casas if c['cy'] > max_y - tol and c['idx'] not in procesadas], key=lambda x: x['cx'], reverse=True)
+    for c in candidatos_inf: muro_inf.append(c); procesadas.add(c['idx'])
+
+    orden_base = muro_izq + muro_sup + muro_der + muro_inf
+    for c in casas:
+        if c['idx'] not in procesadas: orden_base.append(c)
+
+    if es_especial and len(orden_base) > 2:
+        return [orden_base[0], orden_base[-1]] + orden_base[1:-1]
+    return orden_base
+
+# ========================================================
+# 2. EJECUCIÓN CON CONDICIONALES INDEPENDIENTES
+# ========================================================
 mapa_numeros = {}
-for mz, lista in casas_por_manzana.items():
-    # Ordenamiento simplificado para compatibilidad
-    ordenadas = sorted(lista, key=lambda c: (c["cy"], c["cx"]))
-    for n, casa in enumerate(ordenadas, start=1):
+MANZANAS_ESPIRAL_ESPECIAL = {"D", "F", "H"}
+ORDEN_MANZANA_LINEAL = {"A": "LR_T", "C": "LR_T", "E": "RL_T", "G": "LR_T", "J": "LR_T"}
+
+for manzana, casas_lista in casas_por_manzana.items():
+    if manzana == "SIN_MANZANA": continue
+
+    casas_ord = []
+
+    # --- CONDICIONAL MANZANA L (Casas 10 y 11) ---
+    if manzana == "L":
+        casas_ord = ordenar_perimetro(casas_lista, es_especial=False)
+        if len(casas_ord) >= 2:
+            # Swap de las últimas dos para corregir inversión
+            casas_ord[-1], casas_ord[-2] = casas_ord[-2], casas_ord[-1]
+
+    # --- CONDICIONAL MANZANAS I y K (Casas 11 y 12, modo especial) ---
+    elif manzana in ["I", "K"]:
+        casas_ord = ordenar_perimetro(casas_lista, es_especial=True)
+        if len(casas_ord) >= 2:
+            # Swap de las últimas dos de la lista corregida (sin tocar la casa 2)
+            casas_ord[-1], casas_ord[-2] = casas_ord[-2], casas_ord[-1]
+
+    # --- RESTO DE MANZANAS ---
+    elif manzana in MANZANAS_ESPIRAL_ESPECIAL:
+        casas_ord = ordenar_perimetro(casas_lista, es_especial=True)
+    elif manzana == "B":
+        casas_ord = ordenar_rectangular(casas_lista)
+    else:
+        if manzana == "C":
+            filas = agrupar_en_filas(casas_lista, tolerancia=40)
+            casas_ord = sorted(filas[0], key=lambda c: c["cx"])
+        else:
+            modo = ORDEN_MANZANA_LINEAL.get(manzana, "LR_T")
+            casas_ord = ordenar_lineal(casas_lista, modo)
+
+    # ASIGNACIÓN FINAL
+    for n, casa in enumerate(casas_ord, start=1):
         mapa_numeros[casa["idx"]] = n
 
-# ==========================================
-# 4. CARGA DE DATOS DESDE GOOGLE SHEETS
-# ==========================================
+print(f"✅ mapa_numeros corregido: L (10-11), I y K (11-12) con casa 2 fija.")
 
-# A. Cargar Maestro de Partidas
+debug = img.copy()
+
+for c in centroides:
+    cx, cy = int(c["cx"]), int(c["cy"])
+    cv2.circle(debug, (cx, cy), 6, (0,0,255), -1)
+
+# COMENTADO: plt.show() genera incompatibilidad en entornos sin pantalla (headless)
+# plt.figure(figsize=(12,6))
+# plt.imshow(cv2.cvtColor(debug, cv2.COLOR_BGR2RGB))
+# plt.axis("off")
+# plt.show()
+
+
+# ========================================================
+# AUTENTICACIÓN GOOGLE SHEETS (MODIFICADO PARA SECRETO)
+# ========================================================
+
+# MODIFICACIÓN: En lugar de auth.authenticate_user() o leer un archivo,
+# leemos la variable de entorno donde GitHub inyecta el Secreto.
+try:
+    if "GDRIVE_CREDENTIALS" in os.environ:
+        # Si existe la variable de entorno (GitHub Actions)
+        print("🔑 Detectado Secreto GDRIVE_CREDENTIALS. Iniciando sesión...")
+        creds_json = os.environ["GDRIVE_CREDENTIALS"]
+        creds_dict = json.loads(creds_json)
+        gc = gspread.service_account_from_dict(creds_dict)
+    else:
+        # Fallback: Si no está la variable, intentamos buscar el archivo localmente (Para pruebas en tu PC)
+        print("⚠️ No se detectó variable de entorno. Buscando archivo 'GDRIVE_CREDENTIALS.json'...")
+        gc = gspread.service_account(filename='GDRIVE_CREDENTIALS.json')
+
+    print("✅ Autenticación exitosa.")
+
+except Exception as e:
+    raise Exception(f"❌ Error crítico de autenticación: {e}. Revisa tus Secretos de GitHub.")
+
+
+# 2. Abrir el Google Sheet
+spreadsheet_name = '135-CR-CAMPOS DEL SUR 2 (VIVIENDAS_SEDE SOCIAL.1)(1)'
+sh = gc.open(spreadsheet_name)
+
+dict_avances = {}
+
+def es_partida_real(codigo):
+    if not isinstance(codigo, str): return False
+    return len(re.findall(r'\.', codigo.strip())) >= 2
+
+print(f"--- INICIO DE DEBUG (ESCANEO DESDE GOOGLE SHEETS) ---")
+
+# 3. Iterar por las hojas
+worksheets = sh.worksheets()
+
+for ws in worksheets:
+    sheet_name = ws.title
+    if "MANZ." in sheet_name.upper():
+        letra_mz = sheet_name.split('.')[-1].strip()
+
+        data = ws.get_all_values()
+        df_raw = pd.DataFrame(data)
+
+        # 1. Localizar la fila del título "VIVIENDA LOTE"
+        idx_titulo = None
+        for i, row in df_raw.iterrows():
+            row_str = " ".join([str(v).upper() for v in row.values])
+            if "VIVIENDA" in row_str and "LOTE" in row_str:
+                idx_titulo = i
+                break
+
+        if idx_titulo is None:
+            print(f"⚠️ Manzana {letra_mz}: No se halló el texto 'VIVIENDA LOTE'")
+            continue
+
+        # 2. Los números están en la fila SIGUIENTE (idx_titulo + 1)
+        idx_numeros = idx_titulo + 1
+        fila_numeros = df_raw.iloc[idx_numeros]
+
+        columnas_casas_info = [] # (indice_columna, numero_casa)
+
+        for col_idx, valor in enumerate(fila_numeros):
+            val_clean = str(valor).strip()
+            if val_clean.isdigit():
+                num_casa = int(val_clean)
+                columnas_casas_info.append((col_idx, num_casa))
+
+        if not columnas_casas_info:
+            print(f"⚠️ Manzana {letra_mz}: Fila de título en {idx_titulo}, pero fila {idx_numeros} no tiene números.")
+            continue
+
+        print(f"✅ Manzana {letra_mz}: {len(columnas_casas_info)} casas encontradas { [c[1] for c in columnas_casas_info] }")
+
+        # 3. Procesar partidas
+        df_datos = df_raw.iloc[idx_numeros + 1:].copy()
+
+        # Filtrar solo partidas X.x.x
+        mask_partidas = df_datos[0].apply(es_partida_real)
+        df_partidas = df_datos[mask_partidas]
+
+        total_p = len(df_partidas)
+
+        if total_p > 0:
+            for col_idx, num_casa in columnas_casas_info:
+                col_data = df_partidas.iloc[:, col_idx]
+
+                # Lógica de conteo original
+                completadas = col_data.apply(lambda x: str(x).strip() if pd.notna(x) else "").replace("", pd.NA).notna().sum()
+                porcentaje = round((completadas / total_p) * 100, 1)
+                dict_avances[(letra_mz, num_casa)] = porcentaje
+
+print(f"\n--- FIN DE DEBUG ---")
+print(f"Resultado: {len(dict_avances)} registros de avance creados.")
+
+# ========================================================
+# BLOQUE: CARGA DE MAESTRO DE PARTIDAS (FILTRO)
+# ========================================================
+
+try:
+    # Usamos 'gc' ya autenticado
+    sh_maestro = gc.open('Partidas').sheet1
+
+    lista_partidas_maestras = [str(p).strip().upper() for p in sh_maestro.col_values(1) if p]
+
+    def es_partida_valida(nombre_partida):
+        return str(nombre_partida).strip().upper() in lista_partidas_maestras
+
+    print(f"✅ Maestro de partidas cargado con éxito.")
+    print(f"📋 Total de partidas maestras detectadas para filtrar: {len(lista_partidas_maestras)}")
+
+except Exception as e:
+    print(f"❌ Error al cargar el archivo 'Partidas': {e}")
+    # En producción esto debería detenerse, pero lo dejaremos pasar por compatibilidad con tu logica
+# ========================================================
+
+nombre_hoja_obs = 'Pre F1'
+try:
+    sh_obs = gc.open(nombre_hoja_obs)
+    dict_observaciones = {}
+    casas_con_obs = set()
+
+    print(f"--- Iniciando Escaneo de Pestañas ---")
+
+    for hoja in sh_obs.worksheets():
+        nombre_hoja = hoja.title.strip().upper()
+
+        # Procesamos solo las que tienen MZ en el nombre
+        if "MZ" in nombre_hoja:
+            letra_mz = nombre_hoja.replace("MZ", "").strip()
+            filas = hoja.get_all_values()
+            if len(filas) < 2: continue
+
+            for i, fila in enumerate(filas[1:], start=2):
+                if len(fila) < 3: continue
+                lote_raw = str(fila[0]).strip()
+                partida = str(fila[1]).strip()
+                estado = str(fila[2]).strip()
+                comentario = str(fila[3]).strip() if len(fila) > 3 else "Sin detalle"
+
+                try:
+                    num_casa = int(float(lote_raw))
+                except:
+                    continue
+
+                if estado.lower() == "en proceso":
+                    key_partida = (letra_mz, num_casa, partida)
+                    dict_observaciones[key_partida] = comentario
+                    casas_con_obs.add((letra_mz, num_casa))
+
+    print(f"\n--- RESUMEN FINAL ---")
+    print(f"Total observaciones: {len(dict_observaciones)}")
+
+except Exception as e:
+    print(f"Advertencia: No se pudo cargar 'Pre F1': {e}")
+    dict_observaciones = {}
+
+
+# ========================================================
+# 1. CARGA DE LISTA MAESTRA (DOBLE FILTRO: ITEM + NOMBRE)
+# ========================================================
 try:
     sh_maestro = gc.open('Partidas').sheet1
-    # Usamos get_all_values para evitar múltiples llamadas a la API
-    rows = sh_maestro.get_all_values()
-    lista_partidas_maestras = [str(r[0]).strip().upper() for r in rows if r]
-    print(f"✅ Maestro cargado: {len(lista_partidas_maestras)} partidas.")
+    filas_maestras = sh_maestro.get_all_values()
+
+    lista_maestra_llaves = set()
+    for fila in filas_maestras:
+        if len(fila) >= 2:
+            item_m = str(fila[0]).strip().upper()
+            nom_m = str(fila[1]).strip().upper()
+            if item_m and nom_m:
+                lista_maestra_llaves.add(f"{item_m}-{nom_m}")
+
+    print(f"✅ Maestro cargado: {len(lista_maestra_llaves)} combinaciones únicas.")
+
 except Exception as e:
-    print(f"⚠️ Error cargando 'Partidas': {e}")
-    lista_partidas_maestras = []
+    lista_maestra_llaves = set()
+    print(f"⚠️ Error cargando maestro: {e}")
 
-# B. Cargar Observaciones (Pre F1)
-dict_observaciones = {}
-try:
-    sh_obs = gc.open('Pre F1')
-    for hoja in sh_obs.worksheets():
-        m_name = hoja.title.strip().upper().replace("MZ", "").strip()
-        filas = hoja.get_all_values()
-        if len(filas) < 2: continue
-        for f in filas[1:]:
-            if len(f) < 3: continue
-            try:
-                num_c = int(float(str(f[0]).strip()))
-                partida_obs = str(f[1]).strip().upper()
-                estado_obs = str(f[2]).strip().lower()
-                if estado_obs == "en proceso":
-                    dict_observaciones[(m_name, num_c, partida_obs)] = str(f[3]) if len(f)>3 else ""
-            except: continue
-except Exception as e:
-    print(f"⚠️ Error en Pre F1: {e}")
+def es_partida_maestra_estricta(codigo, nombre):
+    return True
 
-# C. Cargar Avances
-try:
-    sh = gc.open('135-CR-CAMPOS DEL SUR 2 (VIVIENDAS_SEDE SOCIAL.1)(1)')
-    dict_detalles_casas = {}
-    
-    for worksheet in sh.worksheets():
-        sheet_name = worksheet.title.upper()
-        if "MANZ" in sheet_name:
-            letra_mz = sheet_name.replace("MANZ.", "").replace("MANZ", "").strip()
-            datos = worksheet.get_all_values()
-            if len(datos) < 5: continue
-            
-            # Buscar fila de Items y columnas de casas
-            idx_item = next((i for i, f in enumerate(datos[:40]) if f and str(f[0]).strip().upper() == "ITEM"), None)
-            if idx_item is None: continue
-            
-            col_casas = []
-            for r_idx in range(max(0, idx_item-2), idx_item+2):
-                for c_idx, val in enumerate(datos[r_idx]):
-                    if c_idx > 1 and str(val).strip().isdigit():
-                        num_v = int(str(val).strip())
-                        if not any(x[1] == num_v for x in col_casas): col_casas.append((c_idx, num_v))
+def normalizar(txt):
+    if not txt: return ""
+    txt = str(txt).lower()
+    txt = "".join(c for c in unicodedata.normalize('NFD', txt) if unicodedata.category(c) != 'Mn')
+    txt = re.sub(r'[^a-z0-9]', '', txt)
+    return txt
 
-            for i in range(idx_item + 1, len(datos)):
-                fila = datos[i]
-                if not fila or not str(fila[0]).strip(): continue
-                item_cod = str(fila[0]).strip().upper()
-                desc_p = str(fila[1]).strip().upper()
-                
-                # Solo procesar si está en el maestro
-                if f"{item_cod}-{desc_p}" in [p for p in lista_partidas_maestras]:
-                    for c_idx, num_v in col_casas:
-                        val_celda = fila[c_idx] if c_idx < len(fila) else ""
-                        terminado = (str(val_celda).strip() != "")
-                        key = (letra_mz, num_v)
-                        if key not in dict_detalles_casas: dict_detalles_casas[key] = []
-                        dict_detalles_casas[key].append({
-                            'partida': f"[{item_cod}] {desc_p}",
-                            'estado': "✅" if terminado else "❌"
-                        })
-except Exception as e:
-    print(f"❌ Error en Spreadsheet principal: {e}")
+# ========================================================
+# 2. PROCESO DE CRUCE
+# ========================================================
 
-# ==========================================
-# 5. GENERACIÓN DE MAPA (FOLIUM)
-# ==========================================
+dict_avances = {}
+dict_detalles_casas = {}
 
-m = folium.Map(location=[h/2, w/2], zoom_start=0, crs='Simple', tiles=None)
-folium.raster_layers.ImageOverlay(image=archivo_plano, bounds=[[0,0], [h,w]]).add_to(m)
+for worksheet in sh.worksheets():
+    sheet_name = worksheet.title
+    if "MANZ" in sheet_name.upper():
+        datos = worksheet.get_all_values()
+        if not datos: continue
 
+        letra_mz = sheet_name.replace("MANZ.", "").replace("MANZ", "").strip().upper()
+
+        fila_item_idx = next((i for i, f in enumerate(datos[:50]) if f and str(f[0]).strip().upper() == "ITEM"), None)
+        if fila_item_idx is None: continue
+
+        columnas_casas = []
+        for i_s in range(max(0, fila_item_idx - 2), min(len(datos), fila_item_idx + 3)):
+            for c_idx, val in enumerate(datos[i_s]):
+                if c_idx > 1 and str(val).strip().isdigit():
+                    num_casa = int(str(val).strip())
+                    if not any(x[1] == num_casa for x in columnas_casas):
+                        columnas_casas.append((c_idx, num_casa))
+
+        titulo_act = ""
+        sub_act = ""
+
+        for i in range(fila_item_idx + 1, len(datos)):
+            fila = datos[i]
+            if not fila or not str(fila[0]).strip(): continue
+
+            item_val = str(fila[0]).strip()
+            desc_val = str(fila[1]).strip()
+            llave_actual = f"{item_val.upper()}-{desc_val.upper()}"
+
+            if llave_actual not in lista_maestra_llaves:
+                if "." not in item_val:
+                    titulo_act = desc_val
+                    sub_act = ""
+                else:
+                    sub_act = desc_val
+                continue
+
+            for col_idx, num_casa in columnas_casas:
+                v_celda = fila[col_idx] if col_idx < len(fila) else ""
+                terminado = (v_celda is not None and str(v_celda).strip() != "")
+
+                key = (letra_mz, num_casa)
+                if key not in dict_detalles_casas: dict_detalles_casas[key] = []
+
+                dict_detalles_casas[key].append({
+                    'titulo': titulo_act,
+                    'subtitulo': sub_act,
+                    'partida': f"[{item_val}] {desc_val}",
+                    'estado': "✅" if terminado else "❌",
+                    'tiene_obs': False,
+                    'comentario': ""
+                })
+
+# 3. Cálculo de porcentajes
+for key, lista in dict_detalles_casas.items():
+    total = len(lista)
+    hechas = sum(1 for p in lista if p['estado'] == "✅")
+    dict_avances[key] = round((hechas / total) * 100, 1) if total > 0 else 0
+
+# ========================================================
+# BLOQUE: RE-ASIGNACIÓN DE IDS Y CLASIFICACIÓN (FORZADO)
+# ========================================================
+
+tipos_ref = {
+    "Tipo B": ["D1", "F1", "F8", "I1", "I8", "K1", "K8", "L1", "L7"],
+    "Tipo C": ["B3", "B4", "B5", "B6", "B7", "G1"],
+    "Tipo D": ["B1", "B2"],
+    "Tipo A2": ["E16", "E17"],
+    "Tipo A1-N": ["E1", "D11", "F11", "I12", "J21"]
+}
+
+dict_tipos_vivienda = {}
+nuevas_llaves_coherentes = []
+
+print("🛠️ Re-vinculando geometrías con nombres de manzana reales...")
+
+for i in range(len(mapa_manzanas)):
+    mz_val = str(mapa_manzanas[i]).strip()
+    num_val = str(mapa_numeros[i]).strip()
+    id_busqueda = f"{mz_val}{num_val}".replace("MANZ.", "").replace(" ", "")
+
+    v_tipo = "Tipo A1"
+    for t_nombre, lista in tipos_ref.items():
+        if id_busqueda in lista:
+            v_tipo = t_nombre
+            break
+
+    dict_tipos_vivienda[(mapa_manzanas[i], mapa_numeros[i])] = v_tipo
+
+print(f"✅ Clasificación forzada completada para {len(dict_tipos_vivienda)} polígonos.")
+
+# ========================================================
+# RECONSTRUCCIÓN DE AVANCES CON FILTRO POR TIPO DE VIVIENDA
+# ========================================================
+
+dict_detalles_casas_filtrado = {}
 dict_avances_filtrado = {}
 
+def partida_aplica_a_vivienda(codigo_partida, tipo_v, mz, casa):
+    reglas = {
+        "B.4.4.1": {"A1", "A1-N", "A2"},
+        "B.4.4.2": {"A1", "A1-N", "A2"},
+        "B.5.3.1": {"A1", "A1-N", "A2"},
+        "C.2.3.1.B": {"A1-N"},
+        "C.5.4": {"A1", "A1-N", "A2", "B"},
+        "C.7.1": {"A1", "A1-N", "A2"},
+        "C.9.3.1": {"A1", "A1-N", "A2", "B"},
+        "C.EX.3": {"A1-N", "D"},
+        "C.EX.14.1": {"A1-N", "B", "C", "D"},
+        "C.EX.15": {"A1-N", "B"},
+        "C.EX.16": {"C", "D"},
+        "D.1.3": {"C", "D"},
+        "D.1.4": {"A1", "A1-N", "A2"},
+        "D.1.5": {"C", "D"},
+        "D.1.8": {"C", "D"},
+        "D.1.9": {"C", "D"},
+        "D.1.10": {"C", "D"},
+        "D.1.11": {"C", "D"},
+        "D.1.12": {"C", "D"},
+        "D.4.5.4": {"D"},
+        "D.EX.3": {"A1-N", "D"},
+        "D.EX.4": {"B"},
+    }
+
+    if codigo_partida not in reglas:
+        return True
+
+    return tipo_v in reglas[codigo_partida]
+
+
+for key, lista_partidas in dict_detalles_casas.items():
+    mz, casa = key
+    tipo_v = dict_tipos_vivienda.get(key, "A1")
+    filtradas = []
+
+    for p in lista_partidas:
+        partida_raw = p.get("partida", "")
+        match = re.search(r'\[(.*?)\]', partida_raw)
+        codigo = match.group(1).strip() if match else ""
+
+        if partida_aplica_a_vivienda(codigo, tipo_v, mz, casa):
+            filtradas.append(p)
+
+    if filtradas:
+        dict_detalles_casas_filtrado[key] = filtradas
+        total_p = len(filtradas)
+        hechas = sum(1 for p in filtradas if p['estado'] == "✅")
+        dict_avances_filtrado[key] = round((hechas / total_p) * 100, 1)
+
+avance_total_obra = round(
+    sum(dict_avances_filtrado.values()) / len(dict_avances_filtrado), 1
+)
+
+print(f"🏗️ Avance total de la obra: {avance_total_obra}%")
+
+# --- PASO FINAL: VINCULAR DATOS DEL EXCEL AL MAPA ---
+
+count = 0
+for (mz, casa_num), lista_partidas_excel in dict_detalles_casas.items():
+    letra_mz_mapa = mz.replace("MZ", "").strip().upper()
+    for p_excel in lista_partidas_excel:
+        nombre_completo_excel = p_excel['partida'].strip().upper()
+        for (mz_obs, casa_obs, partida_obs) in dict_observaciones.keys():
+            if mz_obs == letra_mz_mapa and int(casa_obs) == int(casa_num):
+                if partida_obs.upper() in nombre_completo_excel:
+                    p_excel['tiene_obs'] = True
+                    p_excel['comentario'] = dict_observaciones[(mz_obs, casa_obs, partida_obs)]
+                    count += 1
+                    break
+        else:
+            if 'tiene_obs' not in p_excel:
+                p_excel['tiene_obs'] = False
+
+REGLAS_PARTIDAS = {
+    "B.4.4.1": {"tipos": {"Tipo A1", "Tipo A1-N", "Tipo A2"}},
+    "B.4.4.2": {"tipos": {"Tipo A1", "Tipo A1-N", "Tipo A2"}},
+    "B.5.3.1": {"tipos": {"Tipo A1", "Tipo A1-N", "Tipo A2"}},
+    "C.2.3.1.B": {"tipos": {"Tipo A1-N"}},
+    "C.5.4": {"tipos": {"Tipo A1", "Tipo A1-N", "Tipo A2", "Tipo B"}},
+    "C.7.1": {"tipos": {"Tipo A1", "Tipo A1-N", "Tipo A2"}},
+    "C.9.3.1": {"tipos": {"Tipo A1", "Tipo A1-N", "Tipo A2", "Tipo B"}},
+    "C.EX.3":  {"tipos": {"Tipo A1-N", "Tipo D"}},
+    "C.EX.14.1": {"tipos": {"Tipo A1-N", "Tipo B", "Tipo C", "Tipo D"}},
+    "C.EX.15": {"tipos": {"Tipo A1-N", "Tipo B"}},
+    "C.EX.16": {"tipos": {"Tipo C", "Tipo D"}},
+    "C.EX.18": {"tipos": {"Tipo B", "Tipo C"}},
+    "D.1.3": {"tipos": {"Tipo C", "Tipo D"}},
+    "D.1.4": {"tipos": {"Tipo A1", "Tipo A1-N", "Tipo A2"}},
+    "D.1.5": {"tipos": {"Tipo C", "Tipo D"}},
+    "D.1.8": {"tipos": {"Tipo C", "Tipo D"}},
+    "D.1.9": {"tipos": {"Tipo C", "Tipo D"}},
+    "D.1.10": {"tipos": {"Tipo C", "Tipo D"}},
+    "D.1.11": {"tipos": {"Tipo C", "Tipo D"}},
+    "D.1.12": {"tipos": {"Tipo C", "Tipo D"}},
+    "D.4.5.4": {"tipos": {"Tipo D"}},
+    "D.EX.3": {"tipos": {"Tipo A1-N", "Tipo D"}},
+    "D.EX.4": {"tipos": {"Tipo B"}},
+}
+
+def extraer_codigo_partida(partida_raw):
+    if not partida_raw: return None
+    match = re.search(r'\[([A-Z0-9\.]+)\]', partida_raw)
+    return match.group(1) if match else None
+
+def partida_aplica(partida_raw, tipo_vivienda, manzana, casa):
+    codigo = extraer_codigo_partida(partida_raw)
+    if not codigo: return True
+    if codigo not in REGLAS_PARTIDAS: return True
+    regla = REGLAS_PARTIDAS[codigo]
+    if tipo_vivienda in regla.get("tipos", set()): return True
+    if "excepciones" in regla:
+        if (str(manzana), str(casa)) in regla["excepciones"]: return True
+    return False
+
+def generar_html_popup(manzana, casa_num, detalles, tipo_vivienda, avance):
+    detalles = [
+        d for d in detalles
+        if partida_aplica(d.get("partida"), tipo_vivienda, manzana, casa_num)
+    ]
+    letra_mz_mapa = manzana.replace("MZ", "").strip().upper()
+    for d in detalles:
+        nombre_excel = d.get('partida', '').strip().upper()
+        match_encontrado = False
+        for (mz_obs, casa_obs, partida_obs) in dict_observaciones.keys():
+            if mz_obs == letra_mz_mapa and int(casa_obs) == int(casa_num):
+                if partida_obs.upper() in nombre_excel:
+                    d['tiene_obs'] = True
+                    d['comentario'] = dict_observaciones[(mz_obs, casa_obs, partida_obs)]
+                    match_encontrado = True
+                    break
+        if not match_encontrado: d['tiene_obs'] = False
+
+    resumen = {}
+    for d in detalles:
+        t, s = d['titulo'], d['subtitulo']
+        if t not in resumen: resumen[t] = {'total': 0, 'listo': 0, 'subs': {}, 'obs': False}
+        resumen[t]['total'] += 1
+        if d['estado'] == "✅": resumen[t]['listo'] += 1
+        if d.get('tiene_obs'): resumen[t]['obs'] = True
+        if s:
+            if s not in resumen[t]['subs']: resumen[t]['subs'][s] = {'total': 0, 'listo': 0, 'obs': False}
+            resumen[t]['subs'][s]['total'] += 1
+            if d['estado'] == "✅": resumen[t]['subs'][s]['listo'] += 1
+            if d.get('tiene_obs'): resumen[t]['subs'][s]['obs'] = True
+
+    html = f"""
+    <div style="font-family: 'Segoe UI', Arial; width: 520px; background: white; margin: -15px -10px -10px -10px;">
+        <div style="background: #2c3e50; color: white; padding: 15px 10px; display: flex; justify-content: space-between; align-items: center;">
+            <h4 style="margin: 0; font-size: 16px;">MZ {manzana} - Casa {casa_num} - {tipo_vivienda}</h4>
+            <div style="width: 160px;">
+                <div style="font-size: 12px; font-weight: bold; text-align: right;">{avance}%</div>
+                <div style="background: #dcdde1; border-radius: 6px; height: 8px; overflow: hidden;">
+                    <div style="width: {avance}%; height: 100%; background: linear-gradient(90deg, #2980b9, #27ae60);"></div>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; height: 380px;">
+            <div style="flex: 1.8; overflow-y: auto; padding: 10px; border-right: 1px solid #eee;" id="lista_partidas">
+                <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                    <colgroup><col style="width: 85%;"><col style="width: 15%;"></colgroup>
+    """
+    current_tit, current_sub = None, None
+    for item in detalles:
+        if item['titulo'] != current_tit:
+            current_tit = item['titulo']
+            anchor_tit = f"tit_{abs(hash(current_tit))}"
+            html += f'<tr id="{anchor_tit}" style="background: #edeff0;"><td colspan="2" style="padding: 10px 5px; font-weight: bold; color: #2c3e50; border-top: 2px solid #2c3e50;">{current_tit.upper()}</td></tr>'
+        if item['subtitulo'] != current_sub:
+            current_sub = item['subtitulo']
+            if current_sub:
+                anchor_sub = f"sub_{abs(hash(current_sub))}"
+                html += f'<tr id="{anchor_sub}" style="background: #f9f9f9;"><td colspan="2" style="padding: 6px 8px; font-weight: bold; color: #7f8c8d; font-style: italic; border-bottom: 1px solid #eee;"> ↳ {current_sub}</td></tr>'
+
+        if item.get('tiene_obs'):
+            color_st = "#d4a017"
+            icono_mostrado = "⚠️"
+            comentario = item.get("comentario", "Sin detalle")
+            nombre_partida = f"""<div style="padding: 2px 0;"><b style="color: #d4a017;">{item['partida']}</b><details style="margin-top: 4px;"><summary style="cursor: pointer; color: #856404; font-size: 10px; font-weight: bold;">Ver nota [+]</summary><div style="margin-top: 4px; padding: 8px; background: #fff9e6; border-left: 3px solid #d4a017; color: #856404; font-size: 10px; line-height: 1.4;">{comentario}</div></details></div>"""
+        else:
+            color_st = "#27ae60" if item['estado'] == "✅" else "#e74c3c"
+            icono_mostrado = item['estado']
+            nombre_partida = f"<span style='color: #444; font-size: 11px;'>{item['partida']}</span>"
+        html += f"""<tr style="border-bottom: 1px solid #f2f2f2;"><td style="padding: 8px 10px; vertical-align: top;">{nombre_partida}</td><td style="padding: 8px 5px; text-align: center; color: {color_st}; font-weight: bold; font-size: 14px;">{icono_mostrado}</td></tr>"""
+
+    html += """</table></div><div style="flex: 1.2; background: #f4f7f8; padding: 10px; overflow-y: auto; border-left: 1px solid #ddd;"><div style="font-size: 11px; font-weight: bold; color: #95a5a6; margin-bottom: 10px; text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 5px;">ÍNDICE DE CONTROL</div>"""
+    for tit, datos in resumen.items():
+        anchor_tit = f"tit_{abs(hash(tit))}"
+        bg_tit = "#fff3cd" if datos['obs'] else "#fff"
+        html += f"""<div onclick="document.getElementById('{anchor_tit}').scrollIntoView({{behavior:'smooth'}})" style="cursor: pointer; padding: 6px; background: {bg_tit}; border: 1px solid #dcdde1; border-radius: 4px; margin-bottom: 4px;"><div style="font-weight: bold; color: #2c3e50; font-size: 10px;">{tit}</div><div style="font-size: 9px; color: {'#856404' if datos['obs'] else '#27ae60'};">{datos['listo']}/{datos['total']} completados</div></div>"""
+        for subtit, sdatos in datos['subs'].items():
+            anchor_sub = f"sub_{abs(hash(subtit))}"
+            estilo_s = "color:#856404;font-weight:bold;" if sdatos['obs'] else "color:#636e72;"
+            html += f"""<div onclick="document.getElementById('{anchor_sub}').scrollIntoView({{behavior:'smooth'}})" style="cursor:pointer; padding:4px 6px 4px 15px; margin-bottom:3px; border-left:2px solid {'#f1c40f' if sdatos['obs'] else '#bdc3c7'}; font-size:9px; {estilo_s}">{subtit} {'(!)' if sdatos['obs'] else ''}</div>"""
+    html += "</div></div></div>"
+    return html
+
+# 1. Configuración del Mapa
+limites = [[0, 0], [h, w]]
+m = folium.Map(location=[h/2, w/2], zoom_start=0, crs='Simple', tiles=None)
+folium.raster_layers.ImageOverlay(
+    image='plano.png',
+    bounds=limites,
+    zindex=1
+).add_to(m)
+
+# 2. Lógica de colores
+def obtener_color_estatico(avance, tiene_obs):
+    if tiene_obs: return "#f2ca27"
+    if avance > 80: return "#36d278"
+    if 30 <= avance <= 80: return "#409ad5"
+    return "#d65548"
+
+print("Generando mapa con partidas filtradas y avance recalculado...")
+
+# 3. Generación de viviendas
 for i, geo in enumerate(casas_geometria):
+
     mz = str(mapa_manzanas.get(i, "SIN"))
-    num = mapa_numeros.get(i, 0)
+    try:
+        num = int(float(mapa_numeros.get(i, 0)))
+    except:
+        num = 0
+
     key = (mz, num)
-    
+    avance_val = dict_avances_filtrado.get(key, 0)
     detalles = dict_detalles_casas.get(key, [])
-    hechas = sum(1 for d in detalles if d['estado'] == "✅")
-    total = len(detalles)
-    avance = round((hechas/total)*100, 1) if total > 0 else 0
-    dict_avances_filtrado[key] = avance
-    
-    # Verificar si tiene observaciones "En Proceso"
-    tiene_obs = any(True for (m_o, c_o, p_o) in dict_observaciones.keys() if m_o == mz and c_o == num)
-    
-    color = "#d65548" # Rojo
-    if tiene_obs: color = "#f2ca27" # Amarillo
-    elif avance > 80: color = "#36d278" # Verde
-    elif avance >= 30: color = "#409ad5" # Azul
+    tipo_v = dict_tipos_vivienda.get(key, "Tipo A1")
 
-    # Popup simple
-    html_p = f"<b>MZ {mz} - Casa {num}</b><br>Avance: {avance}%"
-    if tiene_obs: html_p += "<br>⚠️ Tiene observaciones pendientes"
+    letra_mz_limpia = mz.replace("MZ", "").strip().upper()
+    tiene_observacion = False
+    for d in detalles:
+        nombre_excel = d.get('partida', '').strip().upper()
+        for (mz_obs, casa_obs, partida_obs) in dict_observaciones.keys():
+            if mz_obs == letra_mz_limpia and int(casa_obs) == int(num):
+                if partida_obs.upper() in nombre_excel:
+                    d['tiene_obs'] = True
+                    d['comentario'] = dict_observaciones[(mz_obs, casa_obs, partida_obs)]
+                    tiene_observacion = True
+                    break
+        else:
+            if 'tiene_obs' not in d: d['tiene_obs'] = False
 
-    folium.GeoJson(
-        {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [geo]}},
-        style_function=lambda x, c=color: {"fillColor": c, "color": "black", "weight": 1, "fillOpacity": 0.5},
-        tooltip=f"MZ {mz} - #{num}: {avance}%"
-    ).add_child(folium.Popup(html_p)).add_to(m)
+    color_casa = obtener_color_estatico(avance_val, tiene_observacion)
 
-m.fit_bounds([[0,0], [h,w]])
+    if detalles:
+        popup_html = generar_html_popup(mz, num, detalles, tipo_v, avance_val)
+    else:
+        popup_html = f"<div style='font-family:Arial;width:200px;'><b>Mzn {mz} Casa {num} - {tipo_v}</b><br>Avance: {avance_val}%<br>Sin detalles.</div>"
+
+    feature_data = {
+        "type": "Feature",
+        "geometry": {"type": "Polygon", "coordinates": [geo]},
+        "properties": {
+            "manzana": mz,
+            "numero": num,
+            "tipo": tipo_v,
+            "avance": avance_val,
+            "etiqueta_avance": f"""<div style="font-size:12px;font-weight:bold;text-align:right;">{avance_val}%</div><div style="background:#e0e0e0;height:6px;border-radius:4px;overflow:hidden;"><div style="width:{avance_val}%;height:100%;background:linear-gradient(90deg,#2980b9,#27ae60);"></div></div>"""
+        }
+    }
+
+    geo_layer = folium.GeoJson(
+        feature_data,
+        style_function=lambda x, c=color_casa: {"fillColor": c, "fillOpacity": 0.5, "weight": 1.2, "color": "black"},
+        highlight_function=lambda x: {"fillOpacity": 0.8, "weight": 2.5},
+        tooltip=folium.GeoJsonTooltip(
+            fields=["manzana", "numero", "tipo", "etiqueta_avance"],
+            aliases=["Manzana:", "Casa Nº:", "Tipo:", "Avance:"],
+            sticky=True,
+            localize=True,
+            labels=True,
+            style="background-color: white; border: 1px solid black; border-radius: 6px; box-shadow: 2px 2px 6px rgba(0,0,0,0.3); font-family: Arial; font-size: 12px;"
+        )
+    )
+
+    geo_layer.add_child(folium.Popup(popup_html, max_width=520))
+    geo_layer.add_to(m)
+
+overlay_html = f"""
+{{% macro html(this, kwargs) %}}
+<div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 16px 18px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); font-family: Arial; width: 220px;">
+    <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px;">Avance total viviendas</div>
+    <div style="font-size: 26px; font-weight: bold; color: #2c7be5; text-align: center; margin-bottom: 8px;">{avance_total_obra}%</div>
+    <div style="background: #e0e0e0; border-radius: 8px; height: 12px; overflow: hidden;"><div style="width: {avance_total_obra}%; height: 100%; background: linear-gradient(90deg, #27ae60, #2ecc71); transition: width 0.6s ease;"></div></div>
+</div>
+{{% endmacro %}}
+"""
+macro = MacroElement()
+macro._template = Template(overlay_html)
+m.get_root().add_child(macro)
+m.fit_bounds(limites)
+
+# FINALMENTE, GUARDAR
+print("Guardando mapa_generado.html...")
 m.save("mapa_generado.html")
-print("✅ Proceso finalizado. Mapa guardado como index.html")
+print("¡Proceso completado!")
