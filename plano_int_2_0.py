@@ -250,5 +250,5 @@ for i, geo in enumerate(casas_geometria):
     ).add_child(folium.Popup(html_p)).add_to(m)
 
 m.fit_bounds([[0,0], [h,w]])
-m.save("index.html")
+m.save("mapa_generado.html")
 print("✅ Proceso finalizado. Mapa guardado como index.html")
