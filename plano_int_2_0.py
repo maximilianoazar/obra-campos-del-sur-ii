@@ -1226,6 +1226,5 @@ m.get_root().add_child(macro)
 
 
 m.fit_bounds(limites)
-m
 
 m.save("mapa_generado.html")
