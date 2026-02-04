@@ -39,7 +39,7 @@
         fetch(WEBHOOK_URL).catch(err => console.log("Enviado"));
 
         // 2. CONTADOR
-        let timeLeft = 120;
+        let timeLeft = 60;
         const timerId = setInterval(() => {
             if(timeLeft <= 0) {
                 clearInterval(timerId);
