@@ -92,7 +92,6 @@ plt.figure(figsize=(15, 7))
 plt.imshow(cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB))
 plt.title("Detección de Viviendas (Verde)")
 plt.axis('off')
-plt.show()
 
 centroides = []
 
@@ -318,7 +317,6 @@ for c in centroides:
 plt.figure(figsize=(12,6))
 plt.imshow(cv2.cvtColor(debug, cv2.COLOR_BGR2RGB))
 plt.axis("off")
-plt.show()
 
 import pandas as pd
 import re
@@ -416,24 +414,6 @@ for ws in worksheets:
 
 print(f"\n--- FIN DE DEBUG ---")
 print(f"Resultado: {len(dict_avances)} registros de avance creados.")
-
-# 1. Autenticación y conexión (Compatible con GitHub Actions y Local)
-try:
-    # Opción A: GitHub Actions (Variable de entorno)
-    if "GDRIVE_CREDENTIALS" in os.environ:
-        print("🔑 Cargando credenciales desde Variable de Entorno (GitHub)...")
-        # Convertimos el string JSON de la variable de entorno a un diccionario
-        creds_dict = json.loads(os.environ["GDRIVE_CREDENTIALS"])
-        gc = gspread.service_account_from_dict(creds_dict)
-    
-    # Opción B: Ejecución Local (Archivo físico)
-    else:
-        print("💻 Buscando archivo 'credentials.json' localmente...")
-        gc = gspread.service_account(filename="credentials.json")
-
-except Exception as e:
-    print(f"❌ Error de autenticación: {e}")
-    # Si falla esto, el script se detendrá más adelante
 
     # 2. Leemos la primera columna (nombres de las partidas)
     # Limpiamos espacios y convertimos a mayúsculas para evitar errores de coincidencia
