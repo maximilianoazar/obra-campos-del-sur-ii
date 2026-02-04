@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-import json  # Agregado para procesar el secreto JSON
+import json # Necesario para leer el secreto
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
@@ -12,22 +12,20 @@ from branca.element import Template, MacroElement
 from collections import defaultdict
 import unicodedata
 
-# ========================================================
-# CONFIGURACIÓN INICIAL (ADAPTADO PARA GITHUB)
-# ========================================================
+# ==========================================
+# 1. PREPARACIÓN DEL ENTORNO (MODIFICADO)
+# ==========================================
 
-# 1. ELIMINADO: drive.mount('/content/drive') -> Genera incompatibilidad en GitHub.
-# 2. ELIMINADO: Cambio de directorio con os.chdir. Se asume que el script corre en la raíz.
-
+# ELIMINADO: drive.mount y os.chdir
+# Se asume que el script corre donde está el archivo.
 print(f"Directorio de trabajo actual: {os.getcwd()}")
-print("Archivos encontrados:", os.listdir())
 
 # 1. Cargar la imagen
-# Se asume que plano.png está en la raíz del repositorio
+# MODIFICADO: Ruta relativa directa
 img = cv2.imread('plano.png')
 
 if img is None:
-    raise FileNotFoundError("❌ Error: No se encontró 'plano.png'. Asegúrate de que está en el repositorio.")
+    raise FileNotFoundError("ERROR: No se encuentra 'plano.png' en el directorio actual.")
 
 h, w, _ = img.shape
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -79,6 +77,9 @@ for cnt in contours:
               centroides_casas.append((cx, cy))
 
             # --- CORRECCIÓN CLAVE PARA FOLIUM ---
+            # Folium espera [Y, X].
+            # En modo Simple, el origen [0,0] suele estar abajo a la izquierda.
+            # Invertimos el eje Y respecto al alto total (h) para que no salga vertical.
             coords = []
             for pt in approx:
               px_x = float(pt[0][0])
@@ -90,8 +91,8 @@ for cnt in contours:
 
 print(f"ÉXITO: Se detectaron {len(casas_geometria)} viviendas.")
 
-# Visualización de Debug
-# COMENTADO: plt.show() detiene la ejecución en servidores/GitHub Actions
+# Visualización de Debug (Debería verse igual de bien que antes)
+# MODIFICADO: Comentado para evitar error de display en servidor
 # plt.figure(figsize=(15, 7))
 # plt.imshow(cv2.cvtColor(debug_img, cv2.COLOR_BGR2RGB))
 # plt.title("Detección de Viviendas (Verde)")
@@ -108,6 +109,8 @@ for i, geo in enumerate(casas_geometria):
     cy_mapa = sum(ys) / len(ys)
 
     # --- CORRECCIÓN ---
+    # Revertimos la coordenada Y para que coincida con las reglas de MANZANAS (Píxeles originales)
+    # Si no hacemos esto, la lógica de manzanas estará invertida verticalmente.
     cy_pixel = h - cy_mapa
 
     centroides.append({
@@ -135,6 +138,8 @@ for c in centroides:
 # 2. DEFINICIÓN DE MANZANAS
 # =========================
 
+# Ajusta SOLO las condiciones si alguna manzana cambia,
+# pero NO el resto del código
 MANZANAS = {
     "A": lambda x,y: x > 1400 and y < 500,
     "B": lambda x,y: x > 1400 and 500 <= y < 850,
@@ -184,6 +189,8 @@ if "SIN_MANZANA" in casas_por_manzana:
     print("⚠️ Casas sin manzana:")
     for c in casas_por_manzana["SIN_MANZANA"]:
         print(f"idx={c['idx']} cx={int(c['cx'])} cy={int(c['cy'])}")
+
+from collections import defaultdict
 
 casas_por_manzana = defaultdict(list)
 
@@ -313,38 +320,34 @@ for c in centroides:
     cx, cy = int(c["cx"]), int(c["cy"])
     cv2.circle(debug, (cx, cy), 6, (0,0,255), -1)
 
-# COMENTADO: plt.show() genera incompatibilidad en entornos sin pantalla (headless)
+# MODIFICADO: Comentado display
 # plt.figure(figsize=(12,6))
 # plt.imshow(cv2.cvtColor(debug, cv2.COLOR_BGR2RGB))
 # plt.axis("off")
 # plt.show()
 
 
-# ========================================================
-# AUTENTICACIÓN GOOGLE SHEETS (MODIFICADO PARA SECRETO)
-# ========================================================
+# ==========================================
+# 2. AUTENTICACIÓN (MODIFICADO)
+# ==========================================
+# MODIFICADO: Eliminada la autenticación interactiva de Colab.
+# Se usa el secreto JSON 'GDRIVE_CREDENTIALS'.
 
-# MODIFICACIÓN: En lugar de auth.authenticate_user() o leer un archivo,
-# leemos la variable de entorno donde GitHub inyecta el Secreto.
 try:
     if "GDRIVE_CREDENTIALS" in os.environ:
-        # Si existe la variable de entorno (GitHub Actions)
-        print("🔑 Detectado Secreto GDRIVE_CREDENTIALS. Iniciando sesión...")
+        # Entorno GitHub
         creds_json = os.environ["GDRIVE_CREDENTIALS"]
         creds_dict = json.loads(creds_json)
         gc = gspread.service_account_from_dict(creds_dict)
     else:
-        # Fallback: Si no está la variable, intentamos buscar el archivo localmente (Para pruebas en tu PC)
-        print("⚠️ No se detectó variable de entorno. Buscando archivo 'GDRIVE_CREDENTIALS.json'...")
+        # Entorno Local (si tienes el archivo) o Fallback
         gc = gspread.service_account(filename='GDRIVE_CREDENTIALS.json')
-
-    print("✅ Autenticación exitosa.")
-
+    
+    print("✅ Conectado a Google Sheets correctamente.")
 except Exception as e:
-    raise Exception(f"❌ Error crítico de autenticación: {e}. Revisa tus Secretos de GitHub.")
+    raise Exception(f"Error de autenticación: {e}")
 
-
-# 2. Abrir el Google Sheet
+# 2. Abrir el Google Sheet (usa el nombre exacto o el ID de la URL)
 spreadsheet_name = '135-CR-CAMPOS DEL SUR 2 (VIVIENDAS_SEDE SOCIAL.1)(1)'
 sh = gc.open(spreadsheet_name)
 
@@ -356,7 +359,7 @@ def es_partida_real(codigo):
 
 print(f"--- INICIO DE DEBUG (ESCANEO DESDE GOOGLE SHEETS) ---")
 
-# 3. Iterar por las hojas
+# 3. Iterar por las hojas (equivalente a excel_file.sheet_names)
 worksheets = sh.worksheets()
 
 for ws in worksheets:
@@ -364,6 +367,8 @@ for ws in worksheets:
     if "MANZ." in sheet_name.upper():
         letra_mz = sheet_name.split('.')[-1].strip()
 
+        # Leemos la hoja completa y convertimos a DataFrame
+        # get_all_values() trae todo como texto, similar a read_excel con header=None
         data = ws.get_all_values()
         df_raw = pd.DataFrame(data)
 
@@ -393,6 +398,7 @@ for ws in worksheets:
 
         if not columnas_casas_info:
             print(f"⚠️ Manzana {letra_mz}: Fila de título en {idx_titulo}, pero fila {idx_numeros} no tiene números.")
+            print(f"   Contenido detectado en fila {idx_numeros}: {fila_numeros.values[:10]}...")
             continue
 
         print(f"✅ Manzana {letra_mz}: {len(columnas_casas_info)} casas encontradas { [c[1] for c in columnas_casas_info] }")
@@ -400,7 +406,7 @@ for ws in worksheets:
         # 3. Procesar partidas
         df_datos = df_raw.iloc[idx_numeros + 1:].copy()
 
-        # Filtrar solo partidas X.x.x
+        # Filtrar solo partidas X.x.x (usando la columna 0 como en tu código original)
         mask_partidas = df_datos[0].apply(es_partida_real)
         df_partidas = df_datos[mask_partidas]
 
@@ -421,14 +427,23 @@ print(f"Resultado: {len(dict_avances)} registros de avance creados.")
 # ========================================================
 # BLOQUE: CARGA DE MAESTRO DE PARTIDAS (FILTRO)
 # ========================================================
+# Este bloque solo se encarga de definir qué filas del Excel
+# original deben contarse para el promedio.
 
 try:
-    # Usamos 'gc' ya autenticado
+    # 1. Abrimos el nuevo documento creado por ti
+    # MODIFICADO: Usamos gc ya autenticado
     sh_maestro = gc.open('Partidas').sheet1
 
+    # 2. Leemos la primera columna (nombres de las partidas)
+    # Limpiamos espacios y convertimos a mayúsculas para evitar errores de coincidencia
     lista_partidas_maestras = [str(p).strip().upper() for p in sh_maestro.col_values(1) if p]
 
     def es_partida_valida(nombre_partida):
+        """
+        Función que será usada por el procesador de Excel.
+        Compara si la partida del Excel existe en el maestro de Google Sheets.
+        """
         return str(nombre_partida).strip().upper() in lista_partidas_maestras
 
     print(f"✅ Maestro de partidas cargado con éxito.")
@@ -436,50 +451,63 @@ try:
 
 except Exception as e:
     print(f"❌ Error al cargar el archivo 'Partidas': {e}")
-    # En producción esto debería detenerse, pero lo dejaremos pasar por compatibilidad con tu logica
+    print("Revisa que el nombre del archivo sea exactamente 'Partidas' y esté en tu Drive.")
 # ========================================================
 
+# MODIFICADO: Usamos gc ya autenticado
 nombre_hoja_obs = 'Pre F1'
-try:
-    sh_obs = gc.open(nombre_hoja_obs)
-    dict_observaciones = {}
-    casas_con_obs = set()
+sh_obs = gc.open(nombre_hoja_obs)
 
-    print(f"--- Iniciando Escaneo de Pestañas ---")
+dict_observaciones = {}
+casas_con_obs = set()
 
-    for hoja in sh_obs.worksheets():
-        nombre_hoja = hoja.title.strip().upper()
+print(f"--- Iniciando Escaneo de Pestañas ---")
 
-        # Procesamos solo las que tienen MZ en el nombre
-        if "MZ" in nombre_hoja:
-            letra_mz = nombre_hoja.replace("MZ", "").strip()
-            filas = hoja.get_all_values()
-            if len(filas) < 2: continue
+for hoja in sh_obs.worksheets():
+    nombre_hoja = hoja.title.strip().upper()
 
-            for i, fila in enumerate(filas[1:], start=2):
-                if len(fila) < 3: continue
-                lote_raw = str(fila[0]).strip()
-                partida = str(fila[1]).strip()
-                estado = str(fila[2]).strip()
-                comentario = str(fila[3]).strip() if len(fila) > 3 else "Sin detalle"
+    # Procesamos solo las que tienen MZ en el nombre
+    if "MZ" in nombre_hoja:
+        # Extraer letra (ej: de "MZ A" sacar "A")
+        letra_mz = nombre_hoja.replace("MZ", "").strip()
 
-                try:
-                    num_casa = int(float(lote_raw))
-                except:
-                    continue
+        # Obtenemos todos los valores como una lista de listas (filas)
+        filas = hoja.get_all_values()
 
-                if estado.lower() == "en proceso":
-                    key_partida = (letra_mz, num_casa, partida)
-                    dict_observaciones[key_partida] = comentario
-                    casas_con_obs.add((letra_mz, num_casa))
+        if len(filas) < 2: continue # Hoja vacía
 
-    print(f"\n--- RESUMEN FINAL ---")
-    print(f"Total observaciones: {len(dict_observaciones)}")
+        # Recorremos desde la segunda fila para saltar el encabezado
+        for i, fila in enumerate(filas[1:], start=2):
+            # Forzamos que la fila tenga al menos 3 o 4 columnas
+            if len(fila) < 3: continue
 
-except Exception as e:
-    print(f"Advertencia: No se pudo cargar 'Pre F1': {e}")
-    dict_observaciones = {}
+            # ASIGNACIÓN POR POSICIÓN:
+            # A=0 (Lote), B=1 (Partida), C=2 (Estado), D=3 (Comentario)
+            lote_raw = str(fila[0]).strip()
+            partida = str(fila[1]).strip()
+            estado = str(fila[2]).strip()
+            comentario = str(fila[3]).strip() if len(fila) > 3 else "Sin detalle"
 
+            # Intentar convertir Lote a número
+            try:
+                num_casa = int(float(lote_raw))
+            except:
+                continue # Si no es un número, saltamos la fila
+
+            # Comprobación (ignora mayúsculas/minúsculas y espacios)
+            if estado.lower() == "en proceso":
+                key_partida = (letra_mz, num_casa, partida)
+                dict_observaciones[key_partida] = comentario
+                casas_con_obs.add((letra_mz, num_casa))
+                print(f"✅ ¡Éxito! Encontrado en {nombre_hoja}: Casa {num_casa} - {partida}")
+
+print(f"\n--- RESUMEN FINAL ---")
+print(f"Total observaciones: {len(dict_observaciones)}")
+print(f"Casas detectadas: {casas_con_obs}")
+
+import unicodedata
+import re
+import pandas as pd
 
 # ========================================================
 # 1. CARGA DE LISTA MAESTRA (DOBLE FILTRO: ITEM + NOMBRE)
@@ -503,6 +531,8 @@ except Exception as e:
     print(f"⚠️ Error cargando maestro: {e}")
 
 def es_partida_maestra_estricta(codigo, nombre):
+    # Si quieres que realmente filtre por el maestro, usa:
+    # return f"{codigo.strip().upper()}-{nombre.strip().upper()}" in lista_maestra_llaves
     return True
 
 def normalizar(txt):
@@ -513,8 +543,12 @@ def normalizar(txt):
     return txt
 
 # ========================================================
-# 2. PROCESO DE CRUCE
+# 2. PROCESO DE CRUCE (DESDE GOOGLE SHEETS)
 # ========================================================
+# Asumimos que 'sh' es tu objeto de la hoja de cálculo principal ya abierto
+# Ejemplo: sh = gc.open_by_key('TU_ID_DE_SHEET')
+
+# ... (Mantén tu código de carga de lista_maestra_llaves que ya tienes) ...
 
 dict_avances = {}
 dict_detalles_casas = {}
@@ -527,6 +561,7 @@ for worksheet in sh.worksheets():
 
         letra_mz = sheet_name.replace("MANZ.", "").replace("MANZ", "").strip().upper()
 
+        # 1. Buscar fila de ITEM y Columnas de Casas (Tu lógica que ya funciona)
         fila_item_idx = next((i for i, f in enumerate(datos[:50]) if f and str(f[0]).strip().upper() == "ITEM"), None)
         if fila_item_idx is None: continue
 
@@ -538,6 +573,7 @@ for worksheet in sh.worksheets():
                     if not any(x[1] == num_casa for x in columnas_casas):
                         columnas_casas.append((c_idx, num_casa))
 
+        # 2. PROCESAR FILAS
         titulo_act = ""
         sub_act = ""
 
@@ -549,17 +585,22 @@ for worksheet in sh.worksheets():
             desc_val = str(fila[1]).strip()
             llave_actual = f"{item_val.upper()}-{desc_val.upper()}"
 
+            # --- LÓGICA DE LA OPCIÓN 2 ---
+            # Si NO está en el maestro, es un Título o Subtítulo
             if llave_actual not in lista_maestra_llaves:
-                if "." not in item_val:
+                if "." not in item_val: # Ejemplo: "B"
                     titulo_act = desc_val
                     sub_act = ""
-                else:
+                else: # Ejemplo: "B.1"
                     sub_act = desc_val
-                continue
+                continue # Saltamos a la siguiente fila (no es partida de avance)
 
+            # Si SÍ está en el maestro, es una partida real
             for col_idx, num_casa in columnas_casas:
                 v_celda = fila[col_idx] if col_idx < len(fila) else ""
                 terminado = (v_celda is not None and str(v_celda).strip() != "")
+
+                # (Aquí va tu lógica de normalizar y dict_observaciones que ya tienes)
 
                 key = (letra_mz, num_casa)
                 if key not in dict_detalles_casas: dict_detalles_casas[key] = []
@@ -569,7 +610,7 @@ for worksheet in sh.worksheets():
                     'subtitulo': sub_act,
                     'partida': f"[{item_val}] {desc_val}",
                     'estado': "✅" if terminado else "❌",
-                    'tiene_obs': False,
+                    'tiene_obs': False, # Ajustar con tu código de observaciones
                     'comentario': ""
                 })
 
@@ -583,6 +624,7 @@ for key, lista in dict_detalles_casas.items():
 # BLOQUE: RE-ASIGNACIÓN DE IDS Y CLASIFICACIÓN (FORZADO)
 # ========================================================
 
+# Listas de referencia (formato simplificado)
 tipos_ref = {
     "Tipo B": ["D1", "F1", "F8", "I1", "I8", "K1", "K8", "L1", "L7"],
     "Tipo C": ["B3", "B4", "B5", "B6", "B7", "G1"],
@@ -591,25 +633,59 @@ tipos_ref = {
     "Tipo A1-N": ["E1", "D11", "F11", "I12", "J21"]
 }
 
+# 1. Re-mapeo: Vamos a usar las variables originales del escaneo para recrear las llaves
+# mapa_manzanas y mapa_numeros contienen la información real del plano.
 dict_tipos_vivienda = {}
 nuevas_llaves_coherentes = []
 
 print("🛠️ Re-vinculando geometrías con nombres de manzana reales...")
 
 for i in range(len(mapa_manzanas)):
+    # Obtenemos los valores que vienen del escaneo
     mz_val = str(mapa_manzanas[i]).strip()
     num_val = str(mapa_numeros[i]).strip()
+
+    # IMPORTANTE: Aquí es donde el programa suele confundirse.
+    # Si mz_val es un número ('0', '1'...), intentaremos usar la lógica del Excel.
+    # Por ahora, crearemos un ID de búsqueda limpio.
     id_busqueda = f"{mz_val}{num_val}".replace("MANZ.", "").replace(" ", "")
 
+    # Clasificación
     v_tipo = "Tipo A1"
     for t_nombre, lista in tipos_ref.items():
         if id_busqueda in lista:
             v_tipo = t_nombre
             break
 
+    # Guardamos en el diccionario de tipos usando la llave exacta que usará el GeoJSON
     dict_tipos_vivienda[(mapa_manzanas[i], mapa_numeros[i])] = v_tipo
 
 print(f"✅ Clasificación forzada completada para {len(dict_tipos_vivienda)} polígonos.")
+print(f"📊 Resumen: { {t: list(dict_tipos_vivienda.values()).count(t) for t in set(dict_tipos_vivienda.values())} }")
+
+# --- PASO FINAL: ACTUALIZAR EL MAPA ---
+# Esta parte es vital para que el Popup reconozca el tipo
+features_actualizados = []
+for i, geo in enumerate(casas_geometria):
+    mz = mapa_manzanas[i]
+    num = mapa_numeros[i]
+    avance = dict_avances.get((mz, num), 0.0)
+    detalles = dict_detalles_casas.get((mz, num), [])
+    tipo_v = dict_tipos_vivienda.get((mz, num), "Tipo A1")
+
+    features_actualizados.append({
+        "type": "Feature",
+        "geometry": {"type": "Polygon", "coordinates": [geo]},
+        "properties": {
+            "manzana": mz,
+            "numero": num,
+            "tipo": tipo_v, # <--- Ahora el GeoJSON sabe qué tipo es
+            "avance": avance,
+            "detalles": detalles
+        }
+    })
+
+print("✅ GeoJSON actualizado con tipos de vivienda. Ahora puedes generar el mapa.")
 
 # ========================================================
 # RECONSTRUCCIÓN DE AVANCES CON FILTRO POR TIPO DE VIVIENDA
@@ -649,10 +725,14 @@ def partida_aplica_a_vivienda(codigo_partida, tipo_v, mz, casa):
 
     return tipo_v in reglas[codigo_partida]
 
+# ========================================================
+# FILTRADO REAL
+# ========================================================
 
 for key, lista_partidas in dict_detalles_casas.items():
     mz, casa = key
     tipo_v = dict_tipos_vivienda.get(key, "A1")
+
     filtradas = []
 
     for p in lista_partidas:
@@ -665,9 +745,12 @@ for key, lista_partidas in dict_detalles_casas.items():
 
     if filtradas:
         dict_detalles_casas_filtrado[key] = filtradas
+
         total_p = len(filtradas)
         hechas = sum(1 for p in filtradas if p['estado'] == "✅")
         dict_avances_filtrado[key] = round((hechas / total_p) * 100, 1)
+
+print(f"✅ Avances recalculados con filtro por tipo de vivienda: {len(dict_avances_filtrado)} casas")
 
 avance_total_obra = round(
     sum(dict_avances_filtrado.values()) / len(dict_avances_filtrado), 1
@@ -677,21 +760,114 @@ print(f"🏗️ Avance total de la obra: {avance_total_obra}%")
 
 # --- PASO FINAL: VINCULAR DATOS DEL EXCEL AL MAPA ---
 
+# Suponiendo que ya tienes tu lista de casas_geometria y mapa_manzanas/mapa_numeros
+features = []
+
+for i, geo in enumerate(casas_geometria):
+    mz = mapa_manzanas[i]
+    num = mapa_numeros[i]
+
+    # Buscamos el avance en el diccionario que creamos antes
+    # Si no existe, ponemos 0.0
+    avance_vivienda = dict_avances.get((mz, num), 0.0)
+
+    features.append({
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [geo]
+        },
+        "properties": {
+            "manzana": mz,
+            "numero": num,
+            "avance": avance_vivienda  # <--- AQUÍ SE INYECTA EL DATO REAL
+        }
+    })
+
+# Ahora, al definir el estilo_hover, el color cambiará automáticamente según el Excel
+def estilo_hover(feature):
+    avance = feature["properties"]["avance"]
+
+    # Escala de colores (Semáforo)
+    if avance >= 90:
+        color = "#27ae60"   # Verde fuerte (Terminado)
+    elif avance >= 50:
+        color = "#f1c40f"   # Amarillo (En proceso medio)
+    elif avance > 0:
+        color = "#e67e22"   # Naranja (Iniciando)
+    else:
+        color = "#c0392b"   # Rojo (Sin avance)
+
+    return {
+        "fillColor": color,
+        "fillOpacity": 0.7,
+        "weight": 2,
+        "color": "black"
+    }
+
+print("✅ Datos de avance vinculados a los polígonos del plano.")
+
+# --- CELDA DE CRUCE RECARGADA (IGNORA CÓDIGOS [B.1.1]) ---
 count = 0
+
 for (mz, casa_num), lista_partidas_excel in dict_detalles_casas.items():
+    # Limpiamos manzana para buscar
     letra_mz_mapa = mz.replace("MZ", "").strip().upper()
+
     for p_excel in lista_partidas_excel:
         nombre_completo_excel = p_excel['partida'].strip().upper()
+
+        # Ahora buscamos en el diccionario de Google Sheets
+        # Pero iteramos sobre sus llaves porque no sabemos el nombre exacto con código
         for (mz_obs, casa_obs, partida_obs) in dict_observaciones.keys():
+
+            # 1. ¿Es la misma manzana y casa?
             if mz_obs == letra_mz_mapa and int(casa_obs) == int(casa_num):
+
+                # 2. ¿La partida de Google Sheet está dentro de la del Excel?
+                # Ejemplo: "¿REPLANTEO está dentro de [B.1.1] REPLANTEO...?" -> SÍ
                 if partida_obs.upper() in nombre_completo_excel:
                     p_excel['tiene_obs'] = True
                     p_excel['comentario'] = dict_observaciones[(mz_obs, casa_obs, partida_obs)]
                     count += 1
-                    break
+                    break # Ya encontramos el match para esta partida
         else:
+            # Si terminó el loop sin encontrar nada
             if 'tiene_obs' not in p_excel:
                 p_excel['tiene_obs'] = False
+
+print(f"✅ ¡LOGRADO! Se inyectaron {count} observaciones.")
+
+# TEST DE VERIFICACIÓN RÁPIDA
+encontrados = 0
+for casa, lista in dict_detalles_casas.items():
+    for p in lista:
+        if p['tiene_obs']:
+            print(f"✅ ¡ÉXITO! En la casa {casa} encontramos la partida: {p['partida']}")
+            print(f"   Mensaje: {p['comentario']}")
+            encontrados += 1
+
+if encontrados == 0:
+    print("❌ Seguimos sin encontrar coincidencias. Revisa si la partida en Google Sheet está escrita MUY diferente al Excel.")
+
+def estilo_base(feature):
+    avance = feature['properties'].get('avance', 0)
+    # Colores: Rojo (0), Amarillo (1-99), Verde (100)
+    color = '#e74c3c' if avance == 0 else '#f1c40f' if avance < 100 else '#27ae60'
+    return {
+        'fillColor': color,
+        'color': 'black',
+        'weight': 1,
+        'fillOpacity': 0.4
+    }
+
+def estilo_hover(feature):
+    return {
+        'fillColor': '#2980b9', # Azul al pasar el cursor
+        'color': 'white',
+        'weight': 3,
+        'fillOpacity': 0.7
+    }
 
 REGLAS_PARTIDAS = {
     "B.4.4.1": {"tipos": {"Tipo A1", "Tipo A1-N", "Tipo A2"}},
@@ -719,52 +895,90 @@ REGLAS_PARTIDAS = {
     "D.EX.4": {"tipos": {"Tipo B"}},
 }
 
+import re
+
 def extraer_codigo_partida(partida_raw):
-    if not partida_raw: return None
+    """
+    Extrae el código tipo C.EX.15 desde strings como:
+    '[C.EX.15] Proteccion Metalica Ventana'
+    """
+    if not partida_raw:
+        return None
+
     match = re.search(r'\[([A-Z0-9\.]+)\]', partida_raw)
     return match.group(1) if match else None
 
 def partida_aplica(partida_raw, tipo_vivienda, manzana, casa):
     codigo = extraer_codigo_partida(partida_raw)
-    if not codigo: return True
-    if codigo not in REGLAS_PARTIDAS: return True
+
+    # Si no logramos identificar el código → NO filtramos
+    if not codigo:
+        return True
+
+    if codigo not in REGLAS_PARTIDAS:
+        return True
+
     regla = REGLAS_PARTIDAS[codigo]
-    if tipo_vivienda in regla.get("tipos", set()): return True
+
+    if tipo_vivienda in regla.get("tipos", set()):
+        return True
+
     if "excepciones" in regla:
-        if (str(manzana), str(casa)) in regla["excepciones"]: return True
+        if (str(manzana), str(casa)) in regla["excepciones"]:
+            return True
+
     return False
 
 def generar_html_popup(manzana, casa_num, detalles, tipo_vivienda, avance):
+    # 1. FILTRADO (Tu lógica original)
     detalles = [
         d for d in detalles
         if partida_aplica(d.get("partida"), tipo_vivienda, manzana, casa_num)
     ]
+
+    # --- INYECCIÓN DE OBSERVACIONES (Buscador flexible para ignorar códigos [B.1.1]) ---
     letra_mz_mapa = manzana.replace("MZ", "").strip().upper()
+
     for d in detalles:
         nombre_excel = d.get('partida', '').strip().upper()
         match_encontrado = False
+
+        # Buscamos en las llaves del diccionario de Google Sheets
         for (mz_obs, casa_obs, partida_obs) in dict_observaciones.keys():
+            # Validamos Manzana y Casa
             if mz_obs == letra_mz_mapa and int(casa_obs) == int(casa_num):
+                # Validamos si el nombre del Google Sheet está dentro del nombre del Excel
                 if partida_obs.upper() in nombre_excel:
                     d['tiene_obs'] = True
                     d['comentario'] = dict_observaciones[(mz_obs, casa_obs, partida_obs)]
                     match_encontrado = True
                     break
-        if not match_encontrado: d['tiene_obs'] = False
 
+        if not match_encontrado:
+            d['tiene_obs'] = False
+    # -----------------------------------------------------------------------
+
+    # 2. PROCESAMIENTO DEL RESUMEN
     resumen = {}
     for d in detalles:
         t, s = d['titulo'], d['subtitulo']
-        if t not in resumen: resumen[t] = {'total': 0, 'listo': 0, 'subs': {}, 'obs': False}
+        if t not in resumen:
+            resumen[t] = {'total': 0, 'listo': 0, 'subs': {}, 'obs': False}
         resumen[t]['total'] += 1
-        if d['estado'] == "✅": resumen[t]['listo'] += 1
-        if d.get('tiene_obs'): resumen[t]['obs'] = True
+        if d['estado'] == "✅":
+            resumen[t]['listo'] += 1
+        if d.get('tiene_obs'):
+            resumen[t]['obs'] = True
         if s:
-            if s not in resumen[t]['subs']: resumen[t]['subs'][s] = {'total': 0, 'listo': 0, 'obs': False}
+            if s not in resumen[t]['subs']:
+                resumen[t]['subs'][s] = {'total': 0, 'listo': 0, 'obs': False}
             resumen[t]['subs'][s]['total'] += 1
-            if d['estado'] == "✅": resumen[t]['subs'][s]['listo'] += 1
-            if d.get('tiene_obs'): resumen[t]['subs'][s]['obs'] = True
+            if d['estado'] == "✅":
+                resumen[t]['subs'][s]['listo'] += 1
+            if d.get('tiene_obs'):
+                resumen[t]['subs'][s]['obs'] = True
 
+    # 3. HTML
     html = f"""
     <div style="font-family: 'Segoe UI', Arial; width: 520px; background: white; margin: -15px -10px -10px -10px;">
         <div style="background: #2c3e50; color: white; padding: 15px 10px; display: flex; justify-content: space-between; align-items: center;">
@@ -781,12 +995,14 @@ def generar_html_popup(manzana, casa_num, detalles, tipo_vivienda, avance):
                 <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                     <colgroup><col style="width: 85%;"><col style="width: 15%;"></colgroup>
     """
+
     current_tit, current_sub = None, None
     for item in detalles:
         if item['titulo'] != current_tit:
             current_tit = item['titulo']
             anchor_tit = f"tit_{abs(hash(current_tit))}"
             html += f'<tr id="{anchor_tit}" style="background: #edeff0;"><td colspan="2" style="padding: 10px 5px; font-weight: bold; color: #2c3e50; border-top: 2px solid #2c3e50;">{current_tit.upper()}</td></tr>'
+
         if item['subtitulo'] != current_sub:
             current_sub = item['subtitulo']
             if current_sub:
@@ -797,24 +1013,57 @@ def generar_html_popup(manzana, casa_num, detalles, tipo_vivienda, avance):
             color_st = "#d4a017"
             icono_mostrado = "⚠️"
             comentario = item.get("comentario", "Sin detalle")
-            nombre_partida = f"""<div style="padding: 2px 0;"><b style="color: #d4a017;">{item['partida']}</b><details style="margin-top: 4px;"><summary style="cursor: pointer; color: #856404; font-size: 10px; font-weight: bold;">Ver nota [+]</summary><div style="margin-top: 4px; padding: 8px; background: #fff9e6; border-left: 3px solid #d4a017; color: #856404; font-size: 10px; line-height: 1.4;">{comentario}</div></details></div>"""
+            nombre_partida = f"""
+            <div style="padding: 2px 0;">
+                <b style="color: #d4a017;">{item['partida']}</b>
+                <details style="margin-top: 4px;">
+                    <summary style="cursor: pointer; color: #856404; font-size: 10px; font-weight: bold;">Ver nota [+]</summary>
+                    <div style="margin-top: 4px; padding: 8px; background: #fff9e6; border-left: 3px solid #d4a017; color: #856404; font-size: 10px; line-height: 1.4;">
+                        {comentario}
+                    </div>
+                </details>
+            </div>"""
         else:
             color_st = "#27ae60" if item['estado'] == "✅" else "#e74c3c"
             icono_mostrado = item['estado']
             nombre_partida = f"<span style='color: #444; font-size: 11px;'>{item['partida']}</span>"
-        html += f"""<tr style="border-bottom: 1px solid #f2f2f2;"><td style="padding: 8px 10px; vertical-align: top;">{nombre_partida}</td><td style="padding: 8px 5px; text-align: center; color: {color_st}; font-weight: bold; font-size: 14px;">{icono_mostrado}</td></tr>"""
 
-    html += """</table></div><div style="flex: 1.2; background: #f4f7f8; padding: 10px; overflow-y: auto; border-left: 1px solid #ddd;"><div style="font-size: 11px; font-weight: bold; color: #95a5a6; margin-bottom: 10px; text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 5px;">ÍNDICE DE CONTROL</div>"""
+        html += f"""
+        <tr style="border-bottom: 1px solid #f2f2f2;">
+            <td style="padding: 8px 10px; vertical-align: top;">{nombre_partida}</td>
+            <td style="padding: 8px 5px; text-align: center; color: {color_st}; font-weight: bold; font-size: 14px;">{icono_mostrado}</td>
+        </tr>"""
+
+    # Panel del Índice
+    html += """</table></div>
+        <div style="flex: 1.2; background: #f4f7f8; padding: 10px; overflow-y: auto; border-left: 1px solid #ddd;">
+            <div style="font-size: 11px; font-weight: bold; color: #95a5a6; margin-bottom: 10px; text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 5px;">ÍNDICE DE CONTROL</div>
+    """
+
     for tit, datos in resumen.items():
         anchor_tit = f"tit_{abs(hash(tit))}"
         bg_tit = "#fff3cd" if datos['obs'] else "#fff"
-        html += f"""<div onclick="document.getElementById('{anchor_tit}').scrollIntoView({{behavior:'smooth'}})" style="cursor: pointer; padding: 6px; background: {bg_tit}; border: 1px solid #dcdde1; border-radius: 4px; margin-bottom: 4px;"><div style="font-weight: bold; color: #2c3e50; font-size: 10px;">{tit}</div><div style="font-size: 9px; color: {'#856404' if datos['obs'] else '#27ae60'};">{datos['listo']}/{datos['total']} completados</div></div>"""
+        html += f"""
+        <div onclick="document.getElementById('{anchor_tit}').scrollIntoView({{behavior:'smooth'}})"
+            style="cursor: pointer; padding: 6px; background: {bg_tit}; border: 1px solid #dcdde1; border-radius: 4px; margin-bottom: 4px;">
+            <div style="font-weight: bold; color: #2c3e50; font-size: 10px;">{tit}</div>
+            <div style="font-size: 9px; color: {'#856404' if datos['obs'] else '#27ae60'};">{datos['listo']}/{datos['total']} completados</div>
+        </div>"""
+
         for subtit, sdatos in datos['subs'].items():
             anchor_sub = f"sub_{abs(hash(subtit))}"
             estilo_s = "color:#856404;font-weight:bold;" if sdatos['obs'] else "color:#636e72;"
-            html += f"""<div onclick="document.getElementById('{anchor_sub}').scrollIntoView({{behavior:'smooth'}})" style="cursor:pointer; padding:4px 6px 4px 15px; margin-bottom:3px; border-left:2px solid {'#f1c40f' if sdatos['obs'] else '#bdc3c7'}; font-size:9px; {estilo_s}">{subtit} {'(!)' if sdatos['obs'] else ''}</div>"""
+            html += f"""
+            <div onclick="document.getElementById('{anchor_sub}').scrollIntoView({{behavior:'smooth'}})"
+                style="cursor:pointer; padding:4px 6px 4px 15px; margin-bottom:3px; border-left:2px solid {'#f1c40f' if sdatos['obs'] else '#bdc3c7'}; font-size:9px; {estilo_s}">
+                {subtit} {'(!)' if sdatos['obs'] else ''}
+            </div>"""
+
     html += "</div></div></div>"
     return html
+
+import folium
+from branca.element import Template, MacroElement
 
 # 1. Configuración del Mapa
 limites = [[0, 0], [h, w]]
@@ -827,13 +1076,17 @@ folium.raster_layers.ImageOverlay(
 
 # 2. Lógica de colores
 def obtener_color_estatico(avance, tiene_obs):
-    if tiene_obs: return "#f2ca27"
-    if avance > 80: return "#36d278"
-    if 30 <= avance <= 80: return "#409ad5"
-    return "#d65548"
+    if tiene_obs:
+        return "#f2ca27"  # Amarillo
+    if avance > 80:
+        return "#36d278"  # Verde
+    if 30 <= avance <= 80:
+        return "#409ad5"  # Azul
+    return "#d65548"      # Rojo
 
 print("Generando mapa con partidas filtradas y avance recalculado...")
 
+# 3. Generación de viviendas
 # 3. Generación de viviendas
 for i, geo in enumerate(casas_geometria):
 
@@ -844,30 +1097,44 @@ for i, geo in enumerate(casas_geometria):
         num = 0
 
     key = (mz, num)
+
     avance_val = dict_avances_filtrado.get(key, 0)
     detalles = dict_detalles_casas.get(key, [])
     tipo_v = dict_tipos_vivienda.get(key, "Tipo A1")
 
+    # --- NUEVA LÓGICA DE CRUCE (Antes del color) ---
     letra_mz_limpia = mz.replace("MZ", "").strip().upper()
     tiene_observacion = False
+
     for d in detalles:
         nombre_excel = d.get('partida', '').strip().upper()
+        # Buscamos en el diccionario de Google Sheets (dict_observaciones)
         for (mz_obs, casa_obs, partida_obs) in dict_observaciones.keys():
             if mz_obs == letra_mz_limpia and int(casa_obs) == int(num):
                 if partida_obs.upper() in nombre_excel:
                     d['tiene_obs'] = True
                     d['comentario'] = dict_observaciones[(mz_obs, casa_obs, partida_obs)]
-                    tiene_observacion = True
+                    tiene_observacion = True # ¡Ahora sí detectamos el color!
                     break
         else:
             if 'tiene_obs' not in d: d['tiene_obs'] = False
+    # -----------------------------------------------
 
+    # Ahora el color sí recibirá el valor correcto de tiene_observacion
     color_casa = obtener_color_estatico(avance_val, tiene_observacion)
 
     if detalles:
+        # Llamamos a la función (asegúrate de que generar_html_popup ya no intente inyectar datos,
+        # o que simplemente use los que ya inyectamos arriba)
         popup_html = generar_html_popup(mz, num, detalles, tipo_v, avance_val)
     else:
-        popup_html = f"<div style='font-family:Arial;width:200px;'><b>Mzn {mz} Casa {num} - {tipo_v}</b><br>Avance: {avance_val}%<br>Sin detalles.</div>"
+        popup_html = (
+            f"<div style='font-family:Arial;width:200px;'>"
+            f"<b>Mzn {mz} Casa {num} - {tipo_v}</b><br>"
+            f"Avance: {avance_val}%<br>Sin detalles.</div>"
+        )
+
+    # ... (el resto del código sigue igual)
 
     feature_data = {
         "type": "Feature",
@@ -877,42 +1144,111 @@ for i, geo in enumerate(casas_geometria):
             "numero": num,
             "tipo": tipo_v,
             "avance": avance_val,
-            "etiqueta_avance": f"""<div style="font-size:12px;font-weight:bold;text-align:right;">{avance_val}%</div><div style="background:#e0e0e0;height:6px;border-radius:4px;overflow:hidden;"><div style="width:{avance_val}%;height:100%;background:linear-gradient(90deg,#2980b9,#27ae60);"></div></div>"""
+            "etiqueta_avance": f"""
+            <div style="font-size:12px;font-weight:bold;text-align:right;">
+                {avance_val}%
+            </div>
+            <div style="background:#e0e0e0;height:6px;border-radius:4px;overflow:hidden;">
+                <div style="
+                    width:{avance_val}%;
+                    height:100%;
+                    background:linear-gradient(90deg,#2980b9,#27ae60);
+                "></div>
+            </div>
+            """
         }
     }
 
     geo_layer = folium.GeoJson(
         feature_data,
-        style_function=lambda x, c=color_casa: {"fillColor": c, "fillOpacity": 0.5, "weight": 1.2, "color": "black"},
-        highlight_function=lambda x: {"fillOpacity": 0.8, "weight": 2.5},
+        style_function=lambda x, c=color_casa: {
+            "fillColor": c,
+            "fillOpacity": 0.5,
+            "weight": 1.2,
+            "color": "black"
+        },
+        highlight_function=lambda x: {
+            "fillOpacity": 0.8,
+            "weight": 2.5
+        },
         tooltip=folium.GeoJsonTooltip(
             fields=["manzana", "numero", "tipo", "etiqueta_avance"],
             aliases=["Manzana:", "Casa Nº:", "Tipo:", "Avance:"],
             sticky=True,
             localize=True,
             labels=True,
-            style="background-color: white; border: 1px solid black; border-radius: 6px; box-shadow: 2px 2px 6px rgba(0,0,0,0.3); font-family: Arial; font-size: 12px;"
+            style="""
+                background-color: white;
+                border: 1px solid black;
+                border-radius: 6px;
+                box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+                font-family: Arial;
+                font-size: 12px;
+            """
         )
     )
 
     geo_layer.add_child(folium.Popup(popup_html, max_width=520))
     geo_layer.add_to(m)
 
+# 4. Overlay avance total obra
+avance_total_obra = round(
+    sum(dict_avances_filtrado.values()) / len(dict_avances_filtrado), 1
+) if dict_avances_filtrado else 0
+
 overlay_html = f"""
 {{% macro html(this, kwargs) %}}
-<div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 16px 18px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); font-family: Arial; width: 220px;">
-    <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px;">Avance total viviendas</div>
-    <div style="font-size: 26px; font-weight: bold; color: #2c7be5; text-align: center; margin-bottom: 8px;">{avance_total_obra}%</div>
-    <div style="background: #e0e0e0; border-radius: 8px; height: 12px; overflow: hidden;"><div style="width: {avance_total_obra}%; height: 100%; background: linear-gradient(90deg, #27ae60, #2ecc71); transition: width 0.6s ease;"></div></div>
+<div style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: white;
+    padding: 16px 18px;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    font-family: Arial;
+    width: 220px;
+">
+    <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px;">
+        Avance total viviendas
+    </div>
+
+    <div style="
+        font-size: 26px;
+        font-weight: bold;
+        color: #2c7be5;
+        text-align: center;
+        margin-bottom: 8px;
+    ">
+        {avance_total_obra}%
+    </div>
+
+    <div style="
+        background: #e0e0e0;
+        border-radius: 8px;
+        height: 12px;
+        overflow: hidden;
+    ">
+        <div style="
+            width: {avance_total_obra}%;
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            transition: width 0.6s ease;
+        "></div>
+    </div>
 </div>
 {{% endmacro %}}
 """
+
 macro = MacroElement()
 macro._template = Template(overlay_html)
 m.get_root().add_child(macro)
+
+
 m.fit_bounds(limites)
 
-# FINALMENTE, GUARDAR
-print("Guardando mapa_generado.html...")
+# MODIFICADO: Guardar en archivo
+print("Guardando el mapa en 'mapa_generado.html'...")
 m.save("mapa_generado.html")
-print("¡Proceso completado!")
+print("¡Proceso terminado con éxito!")
