@@ -900,15 +900,38 @@ for i, geo in enumerate(casas_geometria):
     geo_layer.add_child(folium.Popup(popup_html, max_width=520))
     geo_layer.add_to(m)
 
+# ========================================================
+# MODIFICACIÓN: AGREGAR BOTÓN DE REGRESO + TARJETA DE AVANCE
+# ========================================================
+
 overlay_html = f"""
 {{% macro html(this, kwargs) %}}
+<a href="https://maximilianoazar.github.io/obra-campos-del-sur-ii/index.html" 
+   style="position: fixed; top: 20px; left: 20px; z-index: 9999; 
+          background-color: white; color: #2c3e50; text-decoration: none; 
+          padding: 10px 18px; border-radius: 50px; font-family: 'Segoe UI', Arial, sans-serif; 
+          font-size: 14px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+          display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; border: 1px solid #eee;"
+   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.2)';"
+   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';"
+   >
+   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+       <line x1="19" y1="12" x2="5" y2="12"></line>
+       <polyline points="12 19 5 12 12 5"></polyline>
+   </svg>
+   <span>Volver al Inicio</span>
+</a>
+
 <div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 16px 18px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); font-family: Arial; width: 220px;">
-    <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px;">Avance total viviendas</div>
+    <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px; color: #555;">Avance total viviendas</div>
     <div style="font-size: 26px; font-weight: bold; color: #2c7be5; text-align: center; margin-bottom: 8px;">{avance_total_obra}%</div>
-    <div style="background: #e0e0e0; border-radius: 8px; height: 12px; overflow: hidden;"><div style="width: {avance_total_obra}%; height: 100%; background: linear-gradient(90deg, #27ae60, #2ecc71); transition: width 0.6s ease;"></div></div>
+    <div style="background: #e0e0e0; border-radius: 8px; height: 12px; overflow: hidden;">
+        <div style="width: {avance_total_obra}%; height: 100%; background: linear-gradient(90deg, #27ae60, #2ecc71); transition: width 0.6s ease;"></div>
+    </div>
 </div>
 {{% endmacro %}}
 """
+
 macro = MacroElement()
 macro._template = Template(overlay_html)
 m.get_root().add_child(macro)
