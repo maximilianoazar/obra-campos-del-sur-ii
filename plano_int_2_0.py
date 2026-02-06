@@ -911,7 +911,7 @@ for i, geo in enumerate(casas_geometria):
 overlay_html = f"""
 {{% macro html(this, kwargs) %}}
 <a href="https://maximilianoazar.github.io/obra-campos-del-sur-ii/index.html" 
-   style="position: fixed; top: 20px; left: 75px; z-index: 9999; 
+   style="position: fixed; top: 20px; left: 70px; z-index: 9999; 
           background-color: white; color: #2c3e50; text-decoration: none; 
           padding: 10px 18px; border-radius: 50px; font-family: 'Segoe UI', Arial, sans-serif; 
           font-size: 14px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
