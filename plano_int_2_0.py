@@ -953,20 +953,20 @@ overlay_html = f"""
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
             <div style="width: 14px; height: 14px; background: #00F2FF; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
-            <span style="font-size: 11px; color: #444; white-space: nowrap;">86% - 99%</span>
+            <span style="font-size: 11px; color: #444; white-space: nowrap;">85% - 99%</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
             <div style="width: 14px; height: 14px; background: #000DFF; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
-            <span style="font-size: 11px; color: #444; white-space: nowrap;">71% - 85%</span>
+            <span style="font-size: 11px; color: #444; white-space: nowrap;">70% - 85%</span>
         </div>
 
         <div style="display: flex; align-items: center; gap: 8px;">
             <div style="width: 14px; height: 14px; background: #C300FF; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
-            <span style="font-size: 11px; color: #444; white-space: nowrap;">51% - 70%</span>
+            <span style="font-size: 11px; color: #444; white-space: nowrap;">50% - 70%</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
             <div style="width: 14px; height: 14px; background: #FF00AA; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
-            <span style="font-size: 11px; color: #444; white-space: nowrap;">31% - 50%</span>
+            <span style="font-size: 11px; color: #444; white-space: nowrap;">30% - 50%</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
             <div style="width: 14px; height: 14px; background: #FF8400; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
