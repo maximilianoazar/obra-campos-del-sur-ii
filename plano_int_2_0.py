@@ -934,46 +934,48 @@ overlay_html = f"""
     </div>
 </div>
 
-<div style="position: fixed; bottom: 30px; left: 20px; z-index: 9999; 
-            background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 12px; 
+<div style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; 
+            background: rgba(255, 255, 255, 0.9); padding: 12px 18px; border-radius: 12px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-family: 'Segoe UI', Arial, sans-serif; 
-            width: 190px; border: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
-    <div style="font-weight: bold; font-size: 14px; margin-bottom: 12px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px;">
-        Referencia de Avance
-    </div>
+            border: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(8px);">
     
-    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-        <div style="width: 18px; height: 18px; background: #F2FF0D; border-radius: 50%; margin-right: 10px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: white;">!</div>
-        <div style="font-size: 12px; color: #444;">Con Observaciones</div>
-    </div>
+    <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px; color: #333; text-transform: uppercase; letter-spacing: 0.5px;">Referencia de Avance</div>
+    
+    <div style="display: grid; grid-template-columns: repeat(4, auto); gap: 10px 20px; align-items: center;">
+        
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 14px; height: 14px; background: #F2FF0D; border-radius: 50%; border: 1px solid #d4d400; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: #333;">!</div>
+            <span style="font-size: 11px; color: #444; white-space: nowrap;">Observaciones</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 14px; height: 14px; background: #00FF19; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
+            <span style="font-size: 11px; color: #444; white-space: nowrap;">100% Finalizado</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 14px; height: 14px; background: #00F2FF; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
+            <span style="font-size: 11px; color: #444; white-space: nowrap;">86% - 99%</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 14px; height: 14px; background: #000DFF; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
+            <span style="font-size: 11px; color: #444; white-space: nowrap;">71% - 85%</span>
+        </div>
 
-    <div style="display: flex; align-items: center; margin-bottom: 6px;">
-        <div style="width: 18px; height: 18px; background: #00FF19; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
-        <div style="font-size: 12px; color: #444;">100% Finalizado</div>
-    </div>
-    <div style="display: flex; align-items: center; margin-bottom: 6px;">
-        <div style="width: 18px; height: 18px; background: #00F2FF; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
-        <div style="font-size: 12px; color: #444;">86% - 99%</div>
-    </div>
-    <div style="display: flex; align-items: center; margin-bottom: 6px;">
-        <div style="width: 18px; height: 18px; background: #000DFF; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
-        <div style="font-size: 12px; color: #444;">71% - 85%</div>
-    </div>
-    <div style="display: flex; align-items: center; margin-bottom: 6px;">
-        <div style="width: 18px; height: 18px; background: #8800FF; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
-        <div style="font-size: 12px; color: #444;">51% - 70%</div>
-    </div>
-    <div style="display: flex; align-items: center; margin-bottom: 6px;">
-        <div style="width: 18px; height: 18px; background: #FF00F2; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
-        <div style="font-size: 12px; color: #444;">31% - 50%</div>
-    </div>
-    <div style="display: flex; align-items: center; margin-bottom: 6px;">
-        <div style="width: 18px; height: 18px; background: #FF0077; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
-        <div style="font-size: 12px; color: #444;">10% - 30%</div>
-    </div>
-    <div style="display: flex; align-items: center;">
-        <div style="width: 18px; height: 18px; background: #FF0000; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
-        <div style="font-size: 12px; color: #444;">0% - 10%</div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 14px; height: 14px; background: #8800FF; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
+            <span style="font-size: 11px; color: #444; white-space: nowrap;">51% - 70%</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 14px; height: 14px; background: #FF00F2; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
+            <span style="font-size: 11px; color: #444; white-space: nowrap;">31% - 50%</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 14px; height: 14px; background: #FF0077; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
+            <span style="font-size: 11px; color: #444; white-space: nowrap;">10% - 30%</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 14px; height: 14px; background: #FF0000; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
+            <span style="font-size: 11px; color: #444; white-space: nowrap;">0% - 10%</span>
+        </div>
     </div>
 </div>
 {{% endmacro %}}
