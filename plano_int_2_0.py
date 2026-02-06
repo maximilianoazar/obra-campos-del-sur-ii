@@ -834,7 +834,7 @@ def obtener_color_estatico(avance, tiene_obs):
     if 85 < avance <= 99: return "#00F2FF"
     if 70 < avance <= 85: return "#000DFF"
     if 50 < avance <= 70: return "#8800FF"
-    if 30 <= avance <= 50: return "#FF00F2"
+    if 30 <= avance <= 50: return "#A200FF"
     if 10 <= avance < 30: return "#FF00AA"
     if avance < 10: return "#FF0000"
 
@@ -965,7 +965,7 @@ overlay_html = f"""
             <span style="font-size: 11px; color: #444; white-space: nowrap;">51% - 70%</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="width: 14px; height: 14px; background: #FF00F2; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
+            <div style="width: 14px; height: 14px; background: #A200FF; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
             <span style="font-size: 11px; color: #444; white-space: nowrap;">31% - 50%</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
