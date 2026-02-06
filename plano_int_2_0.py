@@ -831,7 +831,7 @@ folium.raster_layers.ImageOverlay(
 def obtener_color_estatico(avance, tiene_obs):
     if tiene_obs: return "#F2FF0D"
     if avance >= 100: return "05FF00"
-    if avance > 85: return "#05B802"
+    if avance > 85: return "#59E0FF"
     if 70 < avance <= 85: return "029C00"
     if 50 < avance <= 70: return "243DF2"
     if 30 <= avance <= 50: return "#02159C"
@@ -911,7 +911,7 @@ for i, geo in enumerate(casas_geometria):
 overlay_html = f"""
 {{% macro html(this, kwargs) %}}
 <a href="https://maximilianoazar.github.io/obra-campos-del-sur-ii/index.html" 
-   style="position: fixed; top: 20px; left: 70px; z-index: 9999; 
+   style="position: fixed; top: 20px; left: 60px; z-index: 9999; 
           background-color: white; color: #2c3e50; text-decoration: none; 
           padding: 10px 18px; border-radius: 50px; font-family: 'Segoe UI', Arial, sans-serif; 
           font-size: 14px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
