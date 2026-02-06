@@ -829,10 +829,14 @@ folium.raster_layers.ImageOverlay(
 
 # 2. Lógica de colores
 def obtener_color_estatico(avance, tiene_obs):
-    if tiene_obs: return "#f2ca27"
-    if avance > 80: return "#36d278"
-    if 30 <= avance <= 80: return "#409ad5"
-    return "#d65548"
+    if tiene_obs: return "#F2FF0D"
+    if avance >= 100: return "05FF00"
+    if avance > 85: return "#05B802"
+    if 70 < avance <= 85: return "029C00"
+    if 50 < avance <= 70: return "243DF2"
+    if 30 <= avance <= 50: return "#02159C"
+    if 10 <= avance < 30: return "FF5757"
+    if avance < 10: return "#d65548"
 
 print("Generando mapa con partidas filtradas y avance recalculado...")
 
