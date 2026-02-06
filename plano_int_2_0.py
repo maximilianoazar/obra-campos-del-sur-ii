@@ -926,11 +926,54 @@ overlay_html = f"""
    <span>Volver al Inicio</span>
 </a>
 
-<div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 16px 18px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); font-family: Arial; width: 220px;">
+<div style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 16px 18px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); font-family: 'Segoe UI', Arial; width: 220px;">
     <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px; color: #555;">Avance total viviendas</div>
     <div style="font-size: 26px; font-weight: bold; color: #2c7be5; text-align: center; margin-bottom: 8px;">{avance_total_obra}%</div>
     <div style="background: #e0e0e0; border-radius: 8px; height: 12px; overflow: hidden;">
         <div style="width: {avance_total_obra}%; height: 100%; background: linear-gradient(90deg, #27ae60, #2ecc71); transition: width 0.6s ease;"></div>
+    </div>
+</div>
+
+<div style="position: fixed; bottom: 30px; left: 20px; z-index: 9999; 
+            background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-family: 'Segoe UI', Arial, sans-serif; 
+            width: 190px; border: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
+    <div style="font-weight: bold; font-size: 14px; margin-bottom: 12px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+        Referencia de Avance
+    </div>
+    
+    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+        <div style="width: 18px; height: 18px; background: #F2FF0D; border-radius: 50%; margin-right: 10px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: white;">!</div>
+        <div style="font-size: 12px; color: #444;">Con Observaciones</div>
+    </div>
+
+    <div style="display: flex; align-items: center; margin-bottom: 6px;">
+        <div style="width: 18px; height: 18px; background: #00FF19; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
+        <div style="font-size: 12px; color: #444;">100% Finalizado</div>
+    </div>
+    <div style="display: flex; align-items: center; margin-bottom: 6px;">
+        <div style="width: 18px; height: 18px; background: #00F2FF; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
+        <div style="font-size: 12px; color: #444;">86% - 99%</div>
+    </div>
+    <div style="display: flex; align-items: center; margin-bottom: 6px;">
+        <div style="width: 18px; height: 18px; background: #000DFF; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
+        <div style="font-size: 12px; color: #444;">71% - 85%</div>
+    </div>
+    <div style="display: flex; align-items: center; margin-bottom: 6px;">
+        <div style="width: 18px; height: 18px; background: #8800FF; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
+        <div style="font-size: 12px; color: #444;">51% - 70%</div>
+    </div>
+    <div style="display: flex; align-items: center; margin-bottom: 6px;">
+        <div style="width: 18px; height: 18px; background: #FF00F2; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
+        <div style="font-size: 12px; color: #444;">31% - 50%</div>
+    </div>
+    <div style="display: flex; align-items: center; margin-bottom: 6px;">
+        <div style="width: 18px; height: 18px; background: #FF0077; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
+        <div style="font-size: 12px; color: #444;">10% - 30%</div>
+    </div>
+    <div style="display: flex; align-items: center;">
+        <div style="width: 18px; height: 18px; background: #FF0000; border-radius: 4px; margin-right: 10px; border: 1px solid rgba(0,0,0,0.1);"></div>
+        <div style="font-size: 12px; color: #444;">0% - 10%</div>
     </div>
 </div>
 {{% endmacro %}}
