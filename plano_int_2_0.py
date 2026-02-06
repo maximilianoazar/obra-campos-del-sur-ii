@@ -836,7 +836,7 @@ def obtener_color_estatico(avance, tiene_obs):
     if 50 < avance <= 70: return "#C300FF"
     if 30 <= avance <= 50: return "#FF00AA"
     if 10 <= avance < 30: return "#FF8400"
-    if avance < 10: return "#FF0000"
+    if avance < 10: return "#D10000"
 
 print("Generando mapa con partidas filtradas y avance recalculado...")
 
@@ -973,7 +973,7 @@ overlay_html = f"""
             <span style="font-size: 11px; color: #444; white-space: nowrap;">10% - 30%</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="width: 14px; height: 14px; background: #FF0000; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
+            <div style="width: 14px; height: 14px; background: #D10000; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1);"></div>
             <span style="font-size: 11px; color: #444; white-space: nowrap;">0% - 10%</span>
         </div>
     </div>
