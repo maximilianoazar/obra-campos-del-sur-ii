@@ -23,11 +23,11 @@ print(f"Directorio de trabajo actual: {os.getcwd()}")
 print("Archivos encontrados:", os.listdir())
 
 # 1. Cargar la imagen
-# Se asume que plano.png está en la raíz del repositorio
-img = cv2.imread('plano.png')
+# Se asume que plano2.png está en la raíz del repositorio
+img = cv2.imread('plano2.png')
 
 if img is None:
-    raise FileNotFoundError("❌ Error: No se encontró 'plano.png'. Asegúrate de que está en el repositorio.")
+    raise FileNotFoundError("❌ Error: No se encontró 'plano2.png'. Asegúrate de que está en el repositorio.")
 
 h, w, _ = img.shape
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -822,7 +822,7 @@ def generar_html_popup(manzana, casa_num, detalles, tipo_vivienda, avance):
 limites = [[0, 0], [h, w]]
 m = folium.Map(location=[h/2, w/2], zoom_start=0, crs='Simple', tiles=None)
 folium.raster_layers.ImageOverlay(
-    image='plano.png',
+    image='plano2.png',
     bounds=limites,
     zindex=1
 ).add_to(m)
