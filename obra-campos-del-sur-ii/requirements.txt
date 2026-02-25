@@ -1,9 +1,0 @@
-pandas
-numpy
-opencv-python-headless
-matplotlib
-folium
-gspread
-oauth2client
-google-api-python-client
-openpyxl
