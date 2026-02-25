@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portafolio de Obras | CIMOL</title>
+    <style>
+        :root {
+            --verde-claro: #8ec63f;
+            --verde-medio: #4ca846;
+            --verde-oscuro: #006837;
+            --blanco: #ffffff;
+            --negro-suave: #1a1a1a;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            height: 100%;
+            background-color: var(--negro-suave);
+            color: var(--blanco);
+            overflow-x: hidden;
+        }
+
+        /* FONDO ABSTRACTO CIMOL */
+        .bg-visuals {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 50% 50%, #252525 0%, #1a1a1a 100%);
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.12;
+            animation: move 25s infinite alternate;
+        }
+        .blob-1 { width: 600px; height: 600px; background: var(--verde-oscuro); top: -150px; left: -100px; }
+        .blob-2 { width: 500px; height: 500px; background: var(--verde-claro); bottom: -100px; right: -50px; animation-delay: -7s; }
+
+        @keyframes move {
+            from { transform: translate(0, 0); }
+            to { transform: translate(60px, 80px); }
+        }
+
+        header {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .header-content {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-section { display: flex; flex-direction: column; }
+        .brand-name { font-size: 24px; font-weight: 800; letter-spacing: 2px; margin: 0; }
+        .brand-sub { font-size: 10px; letter-spacing: 4px; color: var(--verde-claro); text-transform: uppercase; }
+
+        .btn-back {
+            text-decoration: none;
+            color: var(--blanco);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+        .btn-back:hover { background: var(--blanco); color: var(--negro-suave); }
+
+        .page-title {
+            text-align: center;
+            margin: 60px 0 40px;
+        }
+
+        .page-title h1 {
+            font-size: 3rem;
+            font-weight: 200;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            margin: 0;
+        }
+
+        .page-title .divider {
+            width: 60px;
+            height: 4px;
+            background: var(--verde-claro);
+            margin: 15px auto;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            padding-bottom: 100px; /* Espacio extra para el footer */
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: 0.4s;
+        }
+
+        .card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: var(--verde-claro);
+            transform: translateY(-8px);
+        }
+
+        .card h2 { font-size: 20px; margin: 0; font-weight: 600; }
+        .card .location { color: var(--verde-claro); font-size: 12px; display: block; margin-top: 10px; letter-spacing: 2px; }
+
+        .btn-card {
+            margin-top: 35px;
+            padding: 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            width: 100%;
+            display: block;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        .btn-active { background: var(--verde-oscuro); color: white; border: none; }
+        .btn-active:hover { background: var(--verde-medio); cursor: pointer; }
+        .btn-inactive { background: transparent; color: #555; border: 1px solid #333; cursor: default; }
+
+        /* MARCA DE COPYRIGHT */
+        footer {
+            position: fixed;
+            bottom: 20px;
+            right: 30px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
+            justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .modal-box {
+            background: #111; padding: 40px; border-radius: 8px;
+            max-width: 400px; text-align: center;
+            border: 1px solid var(--verde-oscuro);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-visuals">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="main-wrapper">
+        <header>
+            <div class="header-content">
+                <div class="brand-section">
+                    <h1 class="brand-name">CIMOL</h1>
+                    <span class="brand-sub">Constructora</span>
+                </div>
+                <a href="index.html" class="btn-back">← Salir</a>
+            </div>
+        </header>
+
+        <div class="page-title">
+            <h1>Portafolio de Obras</h1>
+            <div class="divider"></div>
+        </div>
+
+        <div class="container">
+            <div class="card">
+                <h2>Campos del Sur II</h2>
+                <span class="location">RENAICO</span>
+                <a href="actualizar.html" class="btn-card btn-active">Ver Avance</a>
+            </div>
+
+            <div class="card">
+                <h2>Agua Viva</h2>
+                <span class="location">CHOL CHOL</span>
+                <button class="btn-card btn-inactive" onclick="openModal('Agua Viva')">En Desarrollo</button>
+            </div>
+
+            <div class="card">
+                <h2>Los Copihues y Canelos</h2>
+                <span class="location">GORBEA</span>
+                <button class="btn-card btn-inactive" onclick="openModal('Los Copihues y Canelos')">En Desarrollo</button>
+            </div>
+
+            <div class="card">
+                <h2>Los Kiwis</h2>
+                <span class="location">CHOL CHOL</span>
+                <button class="btn-card btn-inactive" onclick="openModal('Los Kiwis')">En Desarrollo</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        © 2024 CIMOL Constructora. Todos los derechos reservados.
+    </footer>
+
+    <div class="modal" id="infoModal">
+        <div class="modal-box">
+            <h2 style="color: var(--verde-claro)">Módulo en Proceso</h2>
+            <p>Estamos preparando la información de <br><strong id="obraNombre"></strong>.</p>
+            <button class="btn-card btn-active" onclick="closeModal()">Entendido</button>
+        </div>
+    </div>
+
+    <script>
+        function openModal(nombre) {
+            document.getElementById('obraNombre').innerText = nombre;
+            document.getElementById('infoModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
