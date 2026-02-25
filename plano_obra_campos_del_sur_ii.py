@@ -1041,13 +1041,20 @@ def generar_html_popup_tratos(manzana, casa_num, tipo_vivienda):
             <td style="padding: 8px 5px; text-align: center; color: {color_st}; font-weight: bold; font-size: 12px;">{icono_mostrado}</td>
         </tr>"""
 
+    # --- CAMBIO AQUÍ: Encabezado con Presupuestado al lado de la Info ---
     html_final = f"""
     <div style="font-family: 'Segoe UI', Arial; width: 720px; background: white; margin: -15px -10px -10px -10px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
         <div style="background: #1abc9c; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-            <h4 style="margin: 0; font-size: 16px;">MZ {manzana} - Casa {casa_num} - {tipo_vivienda}</h4>
+            <div style="display: flex; align-items: center; gap: 25px;">
+                <h4 style="margin: 0; font-size: 16px; line-height: 1.2;">MZ {manzana} - Casa {casa_num}<br><span style="font-size: 12px; font-weight: normal; opacity: 0.9;">{tipo_vivienda}</span></h4>
+                <div style="border-left: 1px solid rgba(255,255,255,0.4); padding-left: 20px;">
+                    <div style="font-size: 11px; opacity: 0.9; text-transform: uppercase;">Presupuesto Vivienda</div>
+                    <div style="font-size: 17px; font-weight: bold;">{formatear_plata(plata_total)}</div>
+                </div>
+            </div>
             <div style="text-align: right;">
-                <div style="font-size: 11px; opacity: 0.9;">Total Pagado</div>
-                <div style="font-size: 18px; font-weight: bold;">{formatear_plata(plata_ganada)}</div>
+                <div style="font-size: 11px; opacity: 0.9; text-transform: uppercase;">Pago Actual</div>
+                <div style="font-size: 22px; font-weight: bold;">{formatear_plata(plata_ganada)}</div>
             </div>
         </div>
 
@@ -1063,13 +1070,12 @@ def generar_html_popup_tratos(manzana, casa_num, tipo_vivienda):
             <div style="flex: 1.1; background: #f8f9fa; padding: 10px; overflow-y: auto;">
                 <div style="font-size: 11px; font-weight: bold; color: #7f8c8d; margin-bottom: 12px; text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 5px;">RESUMEN Y SUBTOTALES</div>
     """
-
+    # ... (El resto del código se mantiene igual)
     for tit, datos in resumen.items():
         if datos['total'] == 0: continue
         anchor_tit = f"tratos_tit_{abs(hash(tit))}"
         pct_tit = (datos['ganado'] / datos['total']) * 100
 
-        # AÑADIMOS class="btn-indice"
         html_final += f"""
         <div class="btn-indice" onclick="document.getElementById('{anchor_tit}').scrollIntoView({{behavior:'smooth'}})"
              style="cursor: pointer; padding: 8px; background: #2c3e50; border-radius: 4px; margin-bottom: 5px; color: white;">
@@ -1085,7 +1091,6 @@ def generar_html_popup_tratos(manzana, casa_num, tipo_vivienda):
             anchor_sub = f"tratos_sub_{abs(hash(sub))}"
             pct_sub = (dsub['ganado'] / dsub['total']) * 100
 
-            # AÑADIMOS class="btn-indice"
             html_final += f"""
             <div class="btn-indice" onclick="document.getElementById('{anchor_sub}').scrollIntoView({{behavior:'smooth'}})"
                   style="cursor: pointer; padding: 6px 6px 6px 12px; background: white; border: 1px solid #dcdde1; border-radius: 4px; margin-bottom: 4px; margin-left: 10px;">
@@ -1344,7 +1349,7 @@ for i, geo in enumerate(casas_geometria):
              "manzana": mz, "numero": num, "tipo": tipo_v,
              "cuadrillas_list": lista_cuadrillas_casa,
              "color_base": color_tratos_val,
-             "etiqueta": f"""<div style="font-size:12px;font-weight:bold;color:#27ae60;">Gastado: {formatear_plata(plata_g)}</div><div style="font-size:10px;color:#7f8c8d;">Presupuestado: {formatear_plata(plata_t)}</div>"""
+             "etiqueta": f"""<div style="font-size:12px;font-weight:bold;color:#27ae60;">Gastado: {formatear_plata(plata_g)}</div><div style="font-size:10px;color:#7f8c8d;">Presupuesto: {formatear_plata(plata_t)}</div>"""
          }},
         style_function=lambda x, c=color_tratos_val: {"fillColor": c, "fillOpacity": 0.7, "weight": 1.2, "color": "black"},
         # NOTA: Quitamos highlight_function de aquí para manejarlo por JS y que no haya conflicto
@@ -1381,7 +1386,7 @@ overlay_html = r'''
 <div id="tarjeta-tratos" style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 16px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); font-family: 'Segoe UI', Arial; width: 220px; opacity: 0; pointer-events: none; transition: opacity 0.3s;">
     <div style="font-weight: bold; font-size: 13px; color: #555; margin-bottom: 8px;">Plata Pagada (Tratos)</div>
     <div style="font-size: 19px; font-weight: bold; color: #1abc9c; text-align: center; margin-bottom: 8px;">''' + str(formatear_plata(total_plata_obra)) + r'''</div>
-    <div style="font-size: 10px; color: #7f8c8d; text-align: center;">De ''' + str(formatear_plata(total_posible_obra)) + r''' presupuestados</div>
+    <div style="font-size: 10px; color: #7f8c8d; text-align: center;">Presupuesto: ''' + str(formatear_plata(total_posible_obra)) + r'''</div>
 </div>
 
 <div id="leyenda-fisico" style="position: fixed; bottom: 70px; left: 20px; z-index: 9999; background: rgba(255, 255, 255, 0.9); padding: 12px 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-family: 'Segoe UI', Arial; border: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(8px);">
@@ -1608,7 +1613,6 @@ function toggleVista() {
 </script>
 {% endmacro %}
 '''
-
 # ========================================================
 # ORDEN CORRECTO DE CONSTRUCCIÓN DEL MAPA
 # ========================================================
