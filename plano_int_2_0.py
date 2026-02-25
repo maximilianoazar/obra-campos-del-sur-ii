@@ -1609,6 +1609,21 @@ function toggleVista() {
 {% endmacro %}
 '''
 
+# ========================================================
+# ORDEN CORRECTO DE CONSTRUCCIÓN DEL MAPA
+# ========================================================
+
+# 1️⃣ Agregar capas al mapa
+fg_fisico.add_to(m)
+fg_tratos.add_to(m)
+
+# 2️⃣ Control de capas (DEBE ir después)
+folium.LayerControl(collapsed=False).add_to(m)
+
+# 3️⃣ Ajustar límites
+m.fit_bounds(limites)
+
+# 4️⃣ Recién ahora insertar interfaz HTML
 macro = MacroElement()
 macro._template = Template(overlay_html)
 m.get_root().add_child(macro)
