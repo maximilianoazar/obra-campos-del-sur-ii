@@ -137,7 +137,7 @@
                 <h2>Procesando Datos</h2>
                 <p>Sincronizando información de terreno con el servidor central.</p>
                 <div class="loader"></div>
-                <div id="timer">150</div>
+                <div id="timer">100</div>
                 <div class="timer-label">Segundos restantes</div>
             </div>
 
@@ -156,7 +156,7 @@
         fetch(WEBHOOK_URL).catch(err => console.log("Comando enviado"));
 
         // 2. CONTADOR CONFIGURADO A 150 SEGUNDOS
-        let timeLeft = 150;
+        let timeLeft = 100;
         const timerDisplay = document.getElementById('timer');
         const loadingContent = document.getElementById('loading-content');
         const finishedContent = document.getElementById('finished-content');
