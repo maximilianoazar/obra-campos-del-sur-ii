@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Obras | CIMOL</title>
+    <style>
+        /* Paleta de colores basada en Logo CIMOL */
+        :root {
+            --verde-claro: #8ec63f; /* El verde brillante del logo */
+            --verde-oscuro: #006837; /* El verde profundo */
+            --gris-oscuro: #333333;  /* El color del texto CIMOL */
+            --blanco: #ffffff;
+            --fondo-suave: #f8f9fa;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            height: 100%;
+            overflow-x: hidden;
+            background-color: var(--gris-oscuro);
+        }
+
+        /* Capa de fondo estática y dinámica */
+        #bg-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            background-image: url('https://images.unsplash.com/photo-1541888946425-d81bb19480c5?auto=format&fit=crop&w=1920&q=80'); /* Imagen estática inicial (Obra genérica) */
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out, filter 0.5s;
+            filter: brightness(0.4); /* Oscurecemos para que el texto resalte */
+        }
+
+        .main-overlay {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            box-sizing: border-box;
+        }
+
+        /* Botón Volver al Inicio */
+        .nav-header {
+            width: 100%;
+            max-width: 1100px;
+            margin-bottom: 50px;
+        }
+        .btn-back-home {
+            display: inline-flex;
+            align-items: center;
+            color: var(--blanco);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            padding: 10px 18px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 30px;
+            transition: all 0.3s;
+            background: rgba(0,0,0,0.2);
+        }
+        .btn-back-home:hover {
+            background: var(--verde-claro);
+            border-color: var(--verde-claro);
+            transform: translateX(-5px);
+        }
+
+        .header-title {
+            color: var(--blanco);
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 50px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+
+        /* Grid de Obras */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 35px 25px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-bottom: 6px solid var(--verde-oscuro);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: default;
+        }
+
+        /* Efecto de elevación al hacer hover */
+        .project-card:hover {
+            transform: translateY(-10px);
+            border-bottom-color: var(--verde-claro);
+            background: var(--blanco);
+        }
+
+        .project-card h2 {
+            margin: 0;
+            font-size: 22px;
+            color: var(--gris-oscuro);
+        }
+
+        .project-card .city {
+            display: block;
+            margin-top: 8px;
+            color: #777;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Botones de acción */
+        .btn-action {
+            margin-top: 30px;
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .btn-ready {
+            background-color: var(--verde-oscuro);
+            color: white;
+        }
+        .btn-ready:hover {
+            background-color: var(--verde-claro);
+        }
+
+        .btn-pending {
+            background-color: #eee;
+            color: #999;
+            cursor: pointer;
+        }
+        .btn-pending:hover {
+            background-color: #e0e0e0;
+            color: #666;
+        }
+
+        /* Modal Moderno */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 400px;
+            text-align: center;
+            border-top: 8px solid var(--verde-claro);
+        }
+        .close-modal {
+            margin-top: 20px;
+            background: var(--gris-oscuro);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bg-container"></div>
+
+    <div class="main-overlay">
+        
+        <div class="nav-header">
+            <a href="index.html" class="btn-back-home">← Volver al Inicio</a>
+        </div>
+
+        <h1 class="header-title">Portafolio de Proyectos</h1>
+
+        <div class="projects-grid">
+            
+            <div class="project-card" 
+                 onmouseenter="changeBg('https://images.unsplash.com/photo-1503387762-592dee58c460?auto=format&fit=crop&w=1200&q=80')" 
+                 onmouseleave="resetBg()">
+                <div>
+                    <h2>Campos del Sur II</h2>
+                    <span class="city">📍 Renaico</span>
+                </div>
+                <a href="actualizar.html" class="btn-action btn-ready">Ver Avance de Obra</a>
+            </div>
+
+            <div class="project-card" 
+                 onmouseenter="changeBg('https://images.unsplash.com/photo-1590486803833-ffc6f7842ff3?auto=format&fit=crop&w=1200&q=80')" 
+                 onmouseleave="resetBg()">
+                <div>
+                    <h2>Agua Viva</h2>
+                    <span class="city">📍 Chol Chol</span>
+                </div>
+                <button class="btn-action btn-pending" onclick="openModal('Agua Viva')">En Desarrollo</button>
+            </div>
+
+            <div class="project-card" 
+                 onmouseenter="changeBg('https://images.unsplash.com/photo-1589939705384-5185138a04b9?auto=format&fit=crop&w=1200&q=80')" 
+                 onmouseleave="resetBg()">
+                <div>
+                    <h2>Los Copihues y Canelos</h2>
+                    <span class="city">📍 Gorbea</span>
+                </div>
+                <button class="btn-action btn-pending" onclick="openModal('Los Copihues y Los Canelos')">En Desarrollo</button>
+            </div>
+
+            <div class="project-card" 
+                 onmouseenter="changeBg('https://images.unsplash.com/photo-1541888946425-d81bb19480c5?auto=format&fit=crop&w=1200&q=80')" 
+                 onmouseleave="resetBg()">
+                <div>
+                    <h2>Los Kiwis</h2>
+                    <span class="city">📍 Chol Chol</span>
+                </div>
+                <button class="btn-action btn-pending" onclick="openModal('Los Kiwis')">En Desarrollo</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal-content">
+            <h3 id="modalTitle" style="color: var(--verde-oscuro)">Módulo en Proceso</h3>
+            <p>Estamos trabajando en la integración de datos para <strong id="obraNombre"></strong>. Muy pronto podrás ver los avances aquí.</p>
+            <button class="close-modal" onclick="closeModal()">Entendido</button>
+        </div>
+    </div>
+
+    <script>
+        const bgContainer = document.getElementById('bg-container');
+        // Imagen por defecto cuando no hay nada seleccionado
+        const defaultBg = "https://images.unsplash.com/photo-1541888946425-d81bb19480c5?auto=format&fit=crop&w=1920&q=80";
+
+        function changeBg(imageUrl) {
+            bgContainer.style.backgroundImage = `url('${imageUrl}')`;
+            bgContainer.style.filter = "brightness(0.3) scale(1.05)"; // Se oscurece un poco más y hace un zoom suave
+        }
+
+        function resetBg() {
+            bgContainer.style.backgroundImage = `url('${defaultBg}')`;
+            bgContainer.style.filter = "brightness(0.4) scale(1)";
+        }
+
+        function openModal(nombre) {
+            document.getElementById('obraNombre').innerText = nombre;
+            document.getElementById('infoModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
