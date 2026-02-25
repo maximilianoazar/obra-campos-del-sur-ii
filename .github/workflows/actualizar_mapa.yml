@@ -43,7 +43,7 @@ jobs:
         
         # COPIAR LOGO Y FONDO (Para que no desaparezcan)
         cp logo.png public/logo.png || echo "No se encontró logo.png"
-        cp fondo.jpg public/fondo.jpg || echo "No se encontró fondo.jpg"
+        cp fondo.png public/fondo.png || echo "No se encontró fondo.png"
         
         # Copiamos los resultados del script
         cp mapa_generado.html public/mapa_generado.html || echo "No se generó mapa"
