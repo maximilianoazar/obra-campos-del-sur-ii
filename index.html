@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control | CIMOL</title>
+    <style>
+        :root {
+            --verde-claro: #8ec63f;
+            --verde-medio: #4ca846;
+            --verde-oscuro: #006837;
+            --blanco: #ffffff;
+            --negro-suave: #0f0f0f;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--negro-suave);
+        }
+
+        /* FONDO REPARADO: La imagen ahora debería ser visible */
+        .bg-main {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Primero el gradiente de oscurecimiento, luego la imagen */
+            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), 
+                        url('fondo.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -1;
+        }
+
+        .wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.07); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            padding: 45px 35px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+        }
+
+        .logo-img { 
+            max-width: 190px; 
+            height: auto; 
+            margin-bottom: 25px;
+            transition: 0.3s;
+        }
+        .logo-img:hover { transform: scale(1.05); }
+
+        h1 { 
+            color: white;
+            font-size: 24px; 
+            font-weight: 300; 
+            letter-spacing: 4px; 
+            text-transform: uppercase; 
+            margin: 10px 0;
+        }
+
+        .subtitle { 
+            color: var(--verde-claro); 
+            font-size: 11px; 
+            letter-spacing: 3px; 
+            text-transform: uppercase; 
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            display: block;
+            padding: 16px;
+            margin: 14px 0;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary { 
+            background: var(--verde-oscuro); 
+            color: white; 
+            border: none;
+        }
+        .btn-primary:hover { 
+            background: var(--verde-medio);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-outline { 
+            background: transparent; 
+            border: 2px solid var(--verde-claro); 
+            color: var(--verde-claro); 
+        }
+        .btn-outline:hover { 
+            background: var(--verde-claro); 
+            color: var(--negro-suave);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(142, 198, 63, 0.2);
+        }
+
+        .info-box {
+            margin-top: 30px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 25px;
+        }
+
+        footer {
+            margin-top: 30px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-main"></div>
+    
+    <div class="wrapper">
+        <div class="main-card">
+            <a href="https://cimol.cl/">
+                <img src="logo.png" alt="CIMOL" class="logo-img">
+            </a>
+            
+            <h1>Control de Avance</h1>
+            <p class="subtitle">Sistemas de Gestión</p>
+            
+            <a href="Obras.html" class="btn btn-primary">📍 Abrir Portafolio</a>
+            
+            <a href="actualizar.html" class="btn btn-outline">🔄 Actualización de Datos</a>
+            
+            <div class="info-box">
+                CIMOL CONSTRUCTORA © 2024
+            </div>
+        </div>
+
+        <footer>
+            Todos los derechos reservados
+        </footer>
+    </div>
+
+</body>
+</html>
