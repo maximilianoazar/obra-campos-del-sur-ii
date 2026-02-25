@@ -3,53 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Actualizando Sistema - Campos del Sur II</title>
+    <title>Actualizando Sistema | CIMOL</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: #333; }
-        .card { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%; }
-        .loader { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
+        :root {
+            --verde-claro: #8ec63f;
+            --verde-medio: #4ca846;
+            --verde-oscuro: #006837;
+            --blanco: #ffffff;
+            --negro-suave: #0f0f0f;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: black;
+            overflow: hidden;
+            color: var(--blanco);
+        }
+
+        /* FONDO UNIFICADO (Igual al index) */
+        .bg-image {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('fondo.jpg');
+            background-size: cover;
+            background-position: center;
+            z-index: -2;
+        }
+
+        .bg-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: -1;
+        }
+
+        .wrapper {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 85%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        h2 { 
+            font-weight: 300; 
+            letter-spacing: 2px; 
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        p { font-size: 14px; opacity: 0.8; line-height: 1.5; }
+
+        /* LOADER TECNOLÓGICO */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--verde-claro);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+            margin: 30px auto;
+            box-shadow: 0 0 15px rgba(142, 198, 63, 0.2);
+        }
+
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #timer { font-size: 48px; font-weight: bold; color: #2c3e50; margin: 10px 0; }
-        .status { color: #27ae60; font-weight: bold; display: none; }
-        .btn-back { display: none; margin-top: 20px; padding: 12px 25px; background: #2980b9; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; }
+
+        #timer {
+            font-size: 64px;
+            font-weight: 200;
+            color: var(--verde-claro);
+            margin: 10px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            opacity: 0.5;
+        }
+
+        /* BOTÓN DE RETORNO */
+        .btn-back {
+            display: none;
+            margin-top: 25px;
+            padding: 15px 30px;
+            background: var(--verde-oscuro);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-back:hover {
+            background: var(--verde-medio);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        #finished-content h2 { color: var(--verde-claro); }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div id="loading-content">
-            <h2>Actualizando Plano</h2>
-            <p>Estamos procesando los datos de terreno. Por favor, espere...</p>
-            <div class="loader"></div>
-            <div id="timer">90</div>
-            <p style="font-size: 12px; color: #7f8c8d;">Segundos restantes</p>
-        </div>
 
-        <div id="finished-content" style="display:none;">
-            <h2 style="color: #27ae60;">¡Proceso Iniciado!</h2>
-            <p>El servidor ha recibido la orden y está generando el nuevo mapa.</p>
-            <p><b>Nota:</b> El cambio puede tardar hasta 1 minuto en reflejarse.</p>
-            <a href="index.html" class="btn-back" id="btn-back">Volver al Inicio</a>
+    <div class="bg-image"></div>
+    <div class="bg-overlay"></div>
+
+    <div class="wrapper">
+        <div class="card">
+            <div id="loading-content">
+                <h2>Procesando Datos</h2>
+                <p>Sincronizando información de terreno con el servidor central.</p>
+                <div class="loader"></div>
+                <div id="timer">150</div>
+                <div class="timer-label">Segundos restantes</div>
+            </div>
+
+            <div id="finished-content" style="display:none;">
+                <h2>¡Sincronización Iniciada!</h2>
+                <p>La orden ha sido enviada con éxito. El mapa se actualizará en segundo plano.</p>
+                <p style="font-size: 12px; margin-top: 15px;"><i>Nota: Los cambios pueden tardar unos instantes en ser visibles.</i></p>
+                <a href="index.html" class="btn-back" id="btn-back">Volver al Panel Central</a>
+            </div>
         </div>
     </div>
 
     <script>
-        // 1. DISPARAR EL WEBHOOK AUTOMÁTICAMENTE AL ENTRAR
-        const WEBHOOK_URL = "https://hook.us2.make.com/14e1encam4o8ftaqr7kghvsi3wvzudp1"; // <--- PEGA TU URL AQUÍ
-        
-        fetch(WEBHOOK_URL).catch(err => console.log("Enviado"));
+        // 1. DISPARAR EL WEBHOOK AUTOMÁTICAMENTE
+        const WEBHOOK_URL = "https://hook.us2.make.com/14e1encam4o8ftaqr7kghvsi3wvzudp1";
+        fetch(WEBHOOK_URL).catch(err => console.log("Comando enviado"));
 
-        // 2. CONTADOR
-        let timeLeft = 90;
+        // 2. CONTADOR CONFIGURADO A 150 SEGUNDOS
+        let timeLeft = 150;
+        const timerDisplay = document.getElementById('timer');
+        const loadingContent = document.getElementById('loading-content');
+        const finishedContent = document.getElementById('finished-content');
+        const btnBack = document.getElementById('btn-back');
+
         const timerId = setInterval(() => {
+            timeLeft -= 1;
             if(timeLeft <= 0) {
                 clearInterval(timerId);
-                document.getElementById('loading-content').style.display = 'none';
-                document.getElementById('finished-content').style.display = 'block';
-                document.getElementById('btn-back').style.display = 'inline-block';
+                loadingContent.style.display = 'none';
+                finishedContent.style.display = 'block';
+                btnBack.style.display = 'inline-block';
             } else {
-                document.getElementById('timer').innerHTML = timeLeft;
+                timerDisplay.innerHTML = timeLeft;
             }
-            timeLeft -= 1;
         }, 1000);
     </script>
 </body>
