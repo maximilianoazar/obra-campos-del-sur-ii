@@ -13,13 +13,12 @@
             --negro-suave: #0f0f0f;
         }
 
-        /* Usamos la lógica del index antiguo: fondo directo en el body */
         body, html {
             height: 100%;
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', sans-serif;
-            background-image: url('fondo.png'); /* Tu imagen tal cual */
+            background-image: url('fondo.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -133,9 +132,23 @@
             text-transform: uppercase;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
+
+        /* --- ESTILO PARA EL EASTER EGG --- */
+        .easter-egg {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            max-width: 175px; /* Tamaño discreto */
+            opacity: 0.20;   /* Casi invisible */
+            transition: opacity 0.5s ease;
+            pointer-events: none; /* No interfiere con clicks */
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
+
+    <img src="loguito.png" alt="" class="easter-egg">
 
     <div class="wrapper">
         <div class="main-card">
@@ -147,7 +160,6 @@
             <p class="subtitle">Sistemas de Gestión</p>
             
             <a href="Obras.html" class="btn btn-primary">📍 Abrir Portafolio</a>
-            
             <a href="actualizar.html" class="btn btn-outline">🔄 Actualización de Datos</a>
             
             <div class="info-box">
