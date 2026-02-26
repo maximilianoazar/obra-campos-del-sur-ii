@@ -1650,7 +1650,7 @@ m.fit_bounds(esquinas_plano) # Ajustamos la vista inicial al plano original
 macro = MacroElement()
 macro._template = Template(overlay_html)
 m.get_root().add_child(macro)
-m.fit_bounds(limites)
+m.fit_bounds(esquinas_plano) # Ajustamos la vista inicial al plano original
 
 # FINALMENTE, GUARDAR
 print("Guardando obra_campos_del_sur_ii.html...")
