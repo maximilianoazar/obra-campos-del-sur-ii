@@ -1427,7 +1427,7 @@ overlay_html = r'''
     </div>
 </div>
 
-<div id="cont-cuadrillas" style="position: fixed; bottom: 85px; left: 60px; z-index: 9999; display:none; background:white; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.2); width:230px; border:1px solid #1abc9c; overflow:hidden;">
+<div id="cont-cuadrillas" style="position: fixed; bottom: 30px; left: 60px; z-index: 9999; display:none; background:white; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.2); width:230px; border:1px solid #1abc9c; overflow:hidden;">
     <div onclick="toggleMenuCuadrillas()" style="background:#1abc9c; color:white; padding:10px; font-weight:bold; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
         <span style="font-size:13px;">FILTRAR CUADRILLA</span><span id="flecha-menu">▼</span>
     </div>
