@@ -1384,7 +1384,7 @@ overlay_html = r'''
 </div>
 
 <div id="tarjeta-tratos" style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 16px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); font-family: 'Segoe UI', Arial; width: 220px; opacity: 0; pointer-events: none; transition: opacity 0.3s;">
-    <div style="font-weight: bold; font-size: 13px; color: #555; margin-bottom: 8px;">Plata Pagada (Tratos)</div>
+    <div style="font-weight: bold; font-size: 13px; color: #555; margin-bottom: 8px;">Avance de Tratos</div>
     <div style="font-size: 19px; font-weight: bold; color: #1abc9c; text-align: center; margin-bottom: 8px;">''' + str(formatear_plata(total_plata_obra)) + r'''</div>
     <div style="font-size: 10px; color: #7f8c8d; text-align: center;">Presupuesto: ''' + str(formatear_plata(total_posible_obra)) + r'''</div>
 </div>
