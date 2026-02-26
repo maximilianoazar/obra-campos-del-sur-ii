@@ -46,7 +46,7 @@ jobs:
         cp fondo.png public/fondo.png || echo "No se encontró fondo.png"
         
         # Copiamos los resultados del script
-        cp mapa_generado.html public/mapa_generado.html || echo "No se generó mapa"
+        cp /obra_campos_del_sur_ii.html public/obra_campos_del_sur_ii.html || echo "No se generó el plano de la obra campos del sur II"
         cp plano.png public/plano.png || echo "No hay plano.png"
 
     - name: Publicar en GitHub Pages
