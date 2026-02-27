@@ -43,11 +43,10 @@ jobs:
         cp logo.png public/logo.png || echo "No se encontró logo.png"
         cp fondo.png public/fondo.png || echo "No se encontró fondo.png"
         cp loguito.png public/loguito.png || echo "No se encontró loguito.png"
+        cp Plano Aguas Vivas.png public/Plano Aguas Vivas.png || echo "No se generó el PNG"
         
-        # RESULTADOS ESPECÍFICOS DE AGUAS VIVAS
-        # Asumo que el script genera un .html y un .png similares
-        cp plano_aguas_vivas.html public/plano_aguas_vivas.html || echo "No se generó el HTML"
-        cp plano_aguas_vivas.png public/plano_aguas_vivas.png || echo "No se generó el PNG"
+        # RESULTADOS PLANOS
+        cp plano_aguas_vivas.html public/plano_aguas_vivas.html || echo "No se generó plano_aguas_vivas.html"
 
     - name: Publicar en GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
