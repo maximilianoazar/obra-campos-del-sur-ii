@@ -17,13 +17,12 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', sans-serif;
-            height: 100%;
+            min-height: 100%;
             background-color: var(--negro-suave);
             color: var(--blanco);
-            overflow-x: hidden;
         }
 
-        /* FONDO ABSTRACTO CIMOL */
+        /* FONDO ABSTRACTO */
         .bg-visuals {
             position: fixed;
             top: 0; left: 0;
@@ -49,7 +48,7 @@
 
         header {
             width: 100%;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(10px);
             padding: 20px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -87,7 +86,7 @@
         }
 
         .page-title h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 200;
             text-transform: uppercase;
             letter-spacing: 8px;
@@ -101,16 +100,19 @@
             margin: 15px auto;
         }
 
+        /* GRID CORREGIDO */
         .container {
             width: 90%;
             max-width: 1200px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-auto-rows: 1fr; /* Todas las filas miden lo mismo */
             gap: 30px;
-            padding-bottom: 100px; /* Espacio extra para el footer */
+            padding-bottom: 120px;
         }
 
+        /* TARJETA CORREGIDA */
         .card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -118,6 +120,9 @@
             padding: 40px 30px;
             text-align: center;
             transition: 0.4s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Alinea contenido arriba y botón abajo */
         }
 
         .card:hover {
@@ -126,50 +131,51 @@
             transform: translateY(-8px);
         }
 
-        .card h2 { font-size: 20px; margin: 0; font-weight: 600; }
-        .card .location { color: var(--verde-claro); font-size: 12px; display: block; margin-top: 10px; letter-spacing: 2px; }
+        .card h2 { font-size: 18px; margin: 0; font-weight: 600; text-transform: uppercase; }
+        .card .location { color: var(--verde-claro); font-size: 11px; display: block; margin-top: 10px; letter-spacing: 2px; }
 
         .btn-card {
-            margin-top: 35px;
+            margin-top: 30px;
             padding: 15px;
             border-radius: 4px;
             text-decoration: none;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             width: 100%;
             display: block;
             box-sizing: border-box;
             transition: 0.3s;
+            border: none;
         }
 
-        .btn-active { background: var(--verde-oscuro); color: white; border: none; }
-        .btn-active:hover { background: var(--verde-medio); cursor: pointer; }
-        .btn-inactive { background: transparent; color: #555; border: 1px solid #333; cursor: default; }
+        .btn-active { background: var(--verde-oscuro); color: white; cursor: pointer; }
+        .btn-active:hover { background: var(--verde-medio); }
+        .btn-inactive { background: rgba(255,255,255,0.05); color: #666; border: 1px solid rgba(255,255,255,0.1); cursor: default; }
 
-        /* MARCA DE COPYRIGHT */
         footer {
             position: fixed;
             bottom: 20px;
             right: 30px;
-            font-size: 11px;
+            font-size: 10px;
             color: rgba(255, 255, 255, 0.3);
             letter-spacing: 1px;
             text-transform: uppercase;
         }
 
+        /* MODAL */
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.8);
             backdrop-filter: blur(10px);
             justify-content: center; align-items: center;
             z-index: 1000;
         }
         .modal-box {
             background: #111; padding: 40px; border-radius: 8px;
-            max-width: 400px; text-align: center;
+            max-width: 350px; text-align: center;
             border: 1px solid var(--verde-oscuro);
         }
     </style>
@@ -181,47 +187,52 @@
         <div class="blob blob-2"></div>
     </div>
 
-    <div class="main-wrapper">
-        <header>
-            <div class="header-content">
-                <div class="brand-section">
-                    <h1 class="brand-name">CIMOL</h1>
-                    <span class="brand-sub">Constructora</span>
-                </div>
-                <a href="index.html" class="btn-back">← Salir</a>
+    <header>
+        <div class="header-content">
+            <div class="brand-section">
+                <h1 class="brand-name">CIMOL</h1>
+                <span class="brand-sub">Constructora</span>
             </div>
-        </header>
-
-        <div class="page-title">
-            <h1>Portafolio de Obras</h1>
-            <div class="divider"></div>
+            <a href="index.html" class="btn-back">← Salir</a>
         </div>
+    </header>
 
-        <div class="container">
-            <div class="card">
+    <div class="page-title">
+        <h1>Portafolio de Obras</h1>
+        <div class="divider"></div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div>
                 <h2>Campos del Sur II</h2>
                 <span class="location">RENAICO</span>
-                <a href="obra_campos_del_sur_ii.html" class="btn-card btn-active">Ver Avance</a>
             </div>
+            <a href="obra_campos_del_sur_ii.html" class="btn-card btn-active">Ver Avance</a>
+        </div>
 
-        <div class="container">
-            <div class="card">
+        <div class="card">
+            <div>
                 <h2>Aguas Vivas</h2>
                 <span class="location">CHOL CHOL</span>
-                <a href="obra_aguas_vivas.html" class="btn-card btn-active">Ver Avance</a>
-            </div>>
+            </div>
+            <a href="obra_aguas_vivas.html" class="btn-card btn-active">Ver Avance</a>
+        </div>
 
-            <div class="card">
+        <div class="card">
+            <div>
                 <h2>Los Copihues y Canelos</h2>
                 <span class="location">GORBEA</span>
-                <button class="btn-card btn-inactive" onclick="openModal('Los Copihues y Los Canelos')">En Desarrollo</button>
             </div>
+            <button class="btn-card btn-inactive" onclick="openModal('Los Copihues y Los Canelos')">En Desarrollo</button>
+        </div>
 
-            <div class="card">
+        <div class="card">
+            <div>
                 <h2>Los Kiwis</h2>
                 <span class="location">CHOL CHOL</span>
-                <button class="btn-card btn-inactive" onclick="openModal('Los Kiwis')">En Desarrollo</button>
             </div>
+            <button class="btn-card btn-inactive" onclick="openModal('Los Kiwis')">En Desarrollo</button>
         </div>
     </div>
 
@@ -247,5 +258,4 @@
         }
     </script>
 </body>
-
 </html>
