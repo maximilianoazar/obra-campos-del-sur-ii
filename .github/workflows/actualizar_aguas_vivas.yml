@@ -43,10 +43,12 @@ jobs:
         cp logo.png public/logo.png || echo "No se encontró logo.png"
         cp fondo.png public/fondo.png || echo "No se encontró fondo.png"
         cp loguito.png public/loguito.png || echo "No se encontró loguito.png"
-        cp Plano Aguas Vivas.png public/Plano Aguas Vivas.png || echo "No se generó el PNG"
+        cp Plano Aguas Vivas.png public/Plano Aguas Vivas.png || echo "No se generó Plano Aguas Vivas.png"
+        
         
         # RESULTADOS PLANOS
         cp plano_aguas_vivas.html public/plano_aguas_vivas.html || echo "No se generó plano_aguas_vivas.html"
+        cp obra_campos_del_sur_ii.html public/obra_campos_del_sur_ii.html || echo "No se generó el plano de la obra campos del sur II"
 
     - name: Publicar en GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
