@@ -1352,7 +1352,7 @@ overlay_html = r'''
     <span>Volver al Inicio</span>
 </a>
 
-<div id="btn-toggle-view" onclick="toggleVista()" style="position: fixed; bottom: 30; right: 20px; z-index: 9999; cursor: pointer; background: linear-gradient(135deg, #34495e, #2c3e50); color: white; padding: 12px 24px; border-radius: 8px; font-family: 'Segoe UI', Arial; font-size: 14px; font-weight: bold; border: 1px solid #1abc9c; display: flex; align-items: center; gap: 10px;">
+<div id="btn-toggle-view" onclick="toggleVista()" style="position: fixed; bottom: 30px; right: 20px; z-index: 9999; cursor: pointer; background: linear-gradient(135deg, #34495e, #2c3e50); color: white; padding: 12px 24px; border-radius: 8px; font-family: 'Segoe UI', Arial; font-size: 14px; font-weight: bold; border: 1px solid #1abc9c; display: flex; align-items: center; gap: 10px;">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1abc9c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
     <span id="texto-toggle">Cambiar Pestaña a Tratos</span>
 </div>
