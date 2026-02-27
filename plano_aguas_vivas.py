@@ -303,7 +303,7 @@ except Exception as e:
 
 
 # 2. Abrir el Google Sheet
-spreadsheet_name = '135-CR-CAMPOS DEL SUR 2 (VIVIENDAS_SEDE SOCIAL.1)(1)'
+spreadsheet_name = 'CR - OBRA AGUAS VIVAS'
 sh = gc.open(spreadsheet_name)
 
 dict_avances = {}
@@ -783,7 +783,7 @@ def generar_html_popup(manzana, casa_num, detalles, tipo_vivienda, avance):
 # =======================================================
 # PASO 1: CARGA DE LA MATRIZ DE PRECIOS DE TRATOS
 # =======================================================
-nombre_archivo_tratos = 'Tratos - Campos del Sur II 3.0 AGOSTO 2025 modificado ultimo'
+nombre_archivo_tratos = 'Tratos - Aguas Vivas'
 try:
     sh_tratos = gc.open(nombre_archivo_tratos)
     ws_tratos = sh_tratos.worksheet('TRATOS VIVIENDA')
@@ -855,7 +855,7 @@ if datos_tratos:
 # =======================================================
 # LECTURA DE TRATOS Y ASIGNACIÓN DE CUADRILLAS
 # =======================================================
-nombre_archivo_sheets = "Asignación Tratos"
+nombre_archivo_sheets = "Asignación Tratos Obra Aguas Vivas"
 
 try:
     sh_asignacion = gc.open(nombre_archivo_sheets)
@@ -1229,23 +1229,22 @@ for c in todas_cuadrillas:
 # Defines esquinas del plano original para el ImageOverlay
 esquinas_plano = [[0, 0], [h, w]]
 
-# MODIFICACIÓN: Aumentamos considerablemente los márgenes para dar más "aire"
-# Calculamos márgenes basados en porcentaje de ancho (w) y alto (h)
-margen_H = w * 0.45 # Aumentado horizontal
-margen_V_top = h * 0.10 # Agregado vertical hacia arriba
+# MODIFICACIÓN: Definimos márgenes para todos los lados
+margen_H = w * 0.35      # 35% de margen a los lados (izq y der)
+margen_V = h * 0.20      # 20% de margen vertical (arriba y abajo)
 
-# MODIFICACIÓN: Ajustamos los límites máximos permitidos (max_bounds)
-# Expandimos max_lat hacia arriba, min_lon hacia la izquierda y max_lon hacia la derecha.
+# Ajustamos los límites máximos permitidos (max_bounds)
 m = folium.Map(
     location=[h/2, w/2],
     zoom_start=0,
     crs='Simple',
     tiles=None,
     max_bounds=True,
-    min_lat=0,              # Límite inferior estricto (coincide con el plano)
-    max_lat=h + margen_V_top, # Permite moverse un poco arriba del plano
-    min_lon=-margen_H,       # Permite moverse más a la izquierda del plano
-    max_lon=w + margen_H,      # Permite moverse más a la derecha del plano
+    # LÍMITES DE MOVIMIENTO:
+    min_lat=-margen_V,         # <--- CAMBIO: Ahora permite bajar (valor negativo)
+    max_lat=h + margen_V,      # Permite subir más allá del plano
+    min_lon=-margen_H,         # Permite moverse a la izquierda
+    max_lon=w + margen_H,      # Permite moverse a la derecha
     min_zoom=-1
 )
 
@@ -1353,7 +1352,7 @@ overlay_html = r'''
     <span>Volver al Inicio</span>
 </a>
 
-<div id="btn-toggle-view" onclick="toggleVista()" style="position: fixed; bottom: 30px; right: 20px; z-index: 9999; cursor: pointer; background: linear-gradient(135deg, #34495e, #2c3e50); color: white; padding: 12px 24px; border-radius: 8px; font-family: 'Segoe UI', Arial; font-size: 14px; font-weight: bold; border: 1px solid #1abc9c; display: flex; align-items: center; gap: 10px;">
+<div id="btn-toggle-view" onclick="toggleVista()" style="position: fixed; top: 780px; right: 20px; z-index: 9999; cursor: pointer; background: linear-gradient(135deg, #34495e, #2c3e50); color: white; padding: 12px 24px; border-radius: 8px; font-family: 'Segoe UI', Arial; font-size: 14px; font-weight: bold; border: 1px solid #1abc9c; display: flex; align-items: center; gap: 10px;">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1abc9c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
     <span id="texto-toggle">Cambiar Pestaña a Tratos</span>
 </div>
@@ -1370,7 +1369,7 @@ overlay_html = r'''
     <div style="font-size: 10px; color: #7f8c8d; text-align: center;">Presupuesto: ''' + str(formatear_plata(total_posible_obra)) + r'''</div>
 </div>
 
-<div id="leyenda-fisico" style="position: fixed; bottom: 30px; left: 20px; z-index: 9999; background: rgba(255, 255, 255, 0.9); padding: 12px 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-family: 'Segoe UI', Arial; border: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(8px);">
+<div id="leyenda-fisico" style="position: fixed; bottom: 70px; left: 20px; z-index: 9999; background: rgba(255, 255, 255, 0.9); padding: 12px 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); font-family: 'Segoe UI', Arial; border: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(8px);">
     <div style="font-weight: bold; font-size: 13px; margin-bottom: 8px; color: #333; text-transform: uppercase; letter-spacing: 0.5px;">Referencia de Avance</div>
     <div style="display: grid; grid-template-columns: repeat(4, auto); gap: 10px 20px; align-items: center;">
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -1408,7 +1407,7 @@ overlay_html = r'''
     </div>
 </div>
 
-<div id="cont-cuadrillas" style="position: fixed; bottom: 30px; left: 60px; z-index: 9999; display:none; background:white; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.2); width:230px; border:1px solid #1abc9c; overflow:hidden;">
+<div id="cont-cuadrillas" style="position: fixed; bottom: 85px; left: 60px; z-index: 9999; display:none; background:white; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.2); width:230px; border:1px solid #1abc9c; overflow:hidden;">
     <div onclick="toggleMenuCuadrillas()" style="background:#1abc9c; color:white; padding:10px; font-weight:bold; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
         <span style="font-size:13px;">FILTRAR CUADRILLA</span><span id="flecha-menu">▼</span>
     </div>
@@ -1611,6 +1610,6 @@ m.get_root().add_child(macro)
 m.fit_bounds(esquinas_plano) # Ajustamos la vista inicial al plano original
 
 # FINALMENTE, GUARDAR
-print("Guardando obra_campos_del_sur_ii.html...")
+print("Guardando obra_aguas_vivas.html...")
 m.save("obra_aguas_vivas.html")
 print("¡Proceso completado!")
