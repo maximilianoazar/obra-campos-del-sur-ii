@@ -44,6 +44,7 @@ jobs:
         cp fondo.png public/fondo.png || echo "No se encontró fondo.png"
         cp loguito.png public/loguito.png || echo "No se encontró loguito.png"
         cp Plano Aguas Vivas.png public/Plano Aguas Vivas.png || echo "No se generó Plano Aguas Vivas.png"
+        cp plano2.png public/plano2.png || echo "No hay plano.png"
         
         
         # RESULTADOS PLANOS
