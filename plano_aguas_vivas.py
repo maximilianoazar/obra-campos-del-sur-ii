@@ -23,11 +23,11 @@ print(f"Directorio de trabajo actual: {os.getcwd()}")
 print("Archivos encontrados:", os.listdir())
 
 # 1. Cargar la imagen
-# Se asume que plano2.png está en la raíz del repositorio
-img = cv2.imread('plano2.png')
+# Se asume que Plano Aguas Vivas.png está en la raíz del repositorio
+img = cv2.imread('Plano Aguas Vivas.png')
 
 if img is None:
-    raise FileNotFoundError("❌ Error: No se encontró 'plano2.png'. Asegúrate de que está en el repositorio.")
+    raise FileNotFoundError("❌ Error: No se encontró 'Plano Aguas Vivas.png'. Asegúrate de que está en el repositorio.")
 
 h, w, _ = img.shape
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -132,27 +132,26 @@ for c in centroides:
 
 
 # =========================
-# 2. DEFINICIÓN DE MANZANAS
+# 2. DEFINICIÓN DE MANZANAS (SOPORTA MÚLTIPLES ÁREAS)
 # =========================
+
+# Para que no se rompa nada, seguimos usando el nombre MANZANAS.
+# La lógica ahora es: si quieres un solo rectángulo, pones una lambda.
+# Si quieres varios, pones una LISTA de lambdas [lambda..., 
+#lambda...].
 
 MANZANAS = {
-    "A": lambda x,y: x > 1400 and y < 500,
-    "B": lambda x,y: x > 1400 and 500 <= y < 850,
-    "C": lambda x,y: 770 < x <= 1400 and y < 500,
-    "D": lambda x,y: 1250 < x <= 1400 and 550 <= y < 730,
-    "E": lambda x,y: 770 < x <= 1400 and y >= 800,
-    "F": lambda x,y: 1000 < x <= 1230 and 550 <= y < 730,
-    "G": lambda x,y: 80 <= x < 775 and y < 500,
-    "H": lambda x,y: 570 < x < 775 and 550 <= y < 750,
-    "I": lambda x,y: 380 < x <= 710 and 550 <= y < 750,
-    "J": lambda x,y: x <= 780 and y >= 780,
-    "K": lambda x,y: 220 < x <= 380 and 550 <= y < 750,
-    "L": lambda x,y: x <= 215 and 550 <= y < 750
+    "H": lambda x,y: 150 < x < 775 and 250 <= y < 500,
+    "I": lambda x,y: 820 < x <= 1300 and 250 <= y < 500,
+    "J": lambda x,y: 1700 < x <= 2100 and 400 <= y < 500,
+    "K": lambda x,y: 2150 < x <= 2800 and 350 <= y < 500,
+    "L": lambda x,y: 120 < x < 775 and 550 <= y < 750,
+    "M": lambda x,y: 850 < x <= 2100 and 550 <= y < 750,
+    "N": lambda x,y: 2100 < x <= 2800 and 550 <= y < 750
 }
 
-
 # =========================
-# 3. ASIGNACIÓN CASA → MANZANA
+# 3. ASIGNACIÓN CASA → MANZANA (LÓGICA UNIVERSAL)
 # =========================
 
 mapa_manzanas = {}
@@ -160,17 +159,28 @@ casas_por_manzana = {}
 
 for casa in casas:
     asignada = False
+    cx, cy = casa["cx"], casa["cy"]
 
     for manzana, condicion in MANZANAS.items():
-        if condicion(casa["cx"], casa["cy"]):
+        # Verificamos si la condición es una lista (varias áreas) o una sola función
+        if isinstance(condicion, list):
+            # Si CUALQUIERA de las áreas de la lista se cumple
+            cumple = any(c(cx, cy) for c in condicion)
+        else:
+            # Si es una sola función (como lo tenías antes)
+            cumple = condicion(cx, cy)
+
+        if cumple:
             mapa_manzanas[casa["idx"]] = manzana
             casas_por_manzana.setdefault(manzana, []).append(casa)
             asignada = True
             break
 
     if not asignada:
-        mapa_manzanas[casa["idx"]] = "SIN"
-        casas_por_manzana.setdefault("SIN", []).append(casa)
+        mapa_manzanas[casa["idx"]] = "SIN_MANZANA" # Mantenemos el nombre exacto de tu error log
+        casas_por_manzana.setdefault("SIN_MANZANA", []).append(casa)
+
+# El resto de tus prints de DEBUG siguen igual...
 
 
 # DEBUG OPCIONAL
@@ -185,127 +195,75 @@ if "SIN_MANZANA" in casas_por_manzana:
     for c in casas_por_manzana["SIN_MANZANA"]:
         print(f"idx={c['idx']} cx={int(c['cx'])} cy={int(c['cy'])}")
 
+from collections import defaultdict
+
+# Mantenemos tus variables originales para que el resto del notebook las encuentre
 casas_por_manzana = defaultdict(list)
+mapa_manzanas = {}
 
 for casa in centroides:
     x, y = casa["cx"], casa["cy"]
+    idx = casa["idx"]
     asignada = False
 
     for letra, regla in MANZANAS.items():
-        if regla(x, y):
+        # Verificamos si la regla es una lista (áreas múltiples) o una función única
+        if isinstance(regla, list):
+            # Si cualquiera de los rectángulos coincide, la casa pertenece a esa manzana
+            cumple = any(r(x, y) for r in regla)
+        else:
+            # Lógica original para manzanas de un solo rectángulo
+            cumple = regla(x, y)
+
+        if cumple:
             casas_por_manzana[letra].append(casa)
+            mapa_manzanas[idx] = letra # Esto evita que se rompa el mapa después
             asignada = True
             break
 
     if not asignada:
         casas_por_manzana["SIN_MANZANA"].append(casa)
+        mapa_manzanas[idx] = "SIN_MANZANA"
 
-total = 0
-for m, casas in casas_por_manzana.items():
-    print(f"Manzana {m}: {len(casas)} casas")
-    total += len(casas)
-
-print("TOTAL:", total)
+print(f"✅ Proceso completado. Casas asignadas: {len(centroides)}")
 
 # ========================================================
-# 1. FUNCIONES DE ORDENAMIENTO (ESTRUCTURA BASE)
+# 1. MAPEADO MANUAL (REEMPLAZA FUNCIONES DE ORDENAMIENTO)
 # ========================================================
 
-def agrupar_en_filas(casas, tolerancia=25):
-    filas = []
-    for c in sorted(casas, key=lambda x: x["cy"]):
-        agregado = False
-        for fila in filas:
-            if abs(fila[0]["cy"] - c["cy"]) < tolerancia:
-                fila.append(c); agregado = True; break
-        if not agregado: filas.append([c])
-    return filas
-
-def ordenar_rectangular(casas):
-    filas = agrupar_en_filas(casas)
-    casas_ordenadas = []
-    for fila in filas:
-        fila_ordenada = sorted(fila, key=lambda c: c["cx"])
-        casas_ordenadas.extend(fila_ordenada)
-    return casas_ordenadas
-
-def ordenar_lineal(casas, modo):
-    if modo == "LR_T": return sorted(casas, key=lambda c: (c["cy"], c["cx"]))
-    if modo == "RL_T": return sorted(casas, key=lambda c: (c["cy"], -c["cx"]))
-    return casas
-
-def ordenar_perimetro(casas, es_especial=False):
-    if not casas: return []
-    min_x, max_x = min(c['cx'] for c in casas), max(c['cx'] for c in casas)
-    min_y, max_y = min(c['cy'] for c in casas), max(c['cy'] for c in casas)
-    tol = 30
-    muro_izq, muro_sup, muro_der, muro_inf = [], [], [], []
-    procesadas = set()
-
-    candidatos_izq = sorted([c for c in casas if c['cx'] < min_x + tol], key=lambda x: x['cy'], reverse=True)
-    for c in candidatos_izq: muro_izq.append(c); procesadas.add(c['idx'])
-
-    candidatos_sup = sorted([c for c in casas if c['cy'] < min_y + tol and c['idx'] not in procesadas], key=lambda x: x['cx'])
-    for c in candidatos_sup: muro_sup.append(c); procesadas.add(c['idx'])
-
-    candidatos_der = sorted([c for c in casas if c['cx'] > max_x - tol and c['idx'] not in procesadas], key=lambda x: x['cy'])
-    for c in candidatos_der: muro_der.append(c); procesadas.add(c['idx'])
-
-    candidatos_inf = sorted([c for c in casas if c['cy'] > max_y - tol and c['idx'] not in procesadas], key=lambda x: x['cx'], reverse=True)
-    for c in candidatos_inf: muro_inf.append(c); procesadas.add(c['idx'])
-
-    orden_base = muro_izq + muro_sup + muro_der + muro_inf
-    for c in casas:
-        if c['idx'] not in procesadas: orden_base.append(c)
-
-    if es_especial and len(orden_base) > 2:
-        return [orden_base[0], orden_base[-1]] + orden_base[1:-1]
-    return orden_base
+# Aquí es donde ingresas la relación ID (amarillo) -> Número de Casa (Real)
+# Ejemplo: "A": { 150: 1 } significa que el círculo con ID 15 es la Casa 1 de la Manzana A.
+MAPEO_MANUAL = {
+    "H": {107: 1, 96: 2, 64: 3, 89: 4, 106: 5, 114: 6, 121: 7, 120: 8, 113: 9, 105: 10, 95: 11, 63: 12, 88: 13, 104: 14, 112: 15, 119: 16, 118: 17, 111: 18, 103: 19, 94: 20, 62: 21, 86: 22, 102: 23},
+    "I": {101: 1, 93: 2, 61: 3, 83: 4, 100: 5, 110: 6, 117: 7, 116: 8, 109: 9, 99: 10, 87: 11, 85: 12, 84: 13, 82: 14, 98: 15, 108: 16, 115: 17},
+    "J": {58: 1, 90: 2, 81: 3, 80: 4, 79: 5, 78: 6, 77: 7, 92: 8, 60: 9},
+    "K": {68: 1, 76: 2, 75: 3, 74: 4, 73: 5, 72: 6, 71: 7, 70: 8, 69: 9, 67: 10, 66: 11, 65: 12, 59: 13, 91: 14, 97: 15},
+    "L": {57: 1, 56: 2, 55: 3, 54: 4, 53: 5, 52: 6, 51: 7, 50: 8, 49: 9, 48: 10, 7: 11, 46: 12, 45: 13, 44: 14, 43: 15},
+    "M": {42: 1, 41: 2, 40: 3, 39: 4, 38: 5, 37: 6, 36: 7, 35: 8, 34: 9, 33: 10, 32: 11, 31: 12, 30: 13, 29: 14, 28: 15, 27: 16, 26: 17, 25: 18, 23: 19, 22: 20, 21: 21, 20: 22, 19: 23, 18: 24, 17: 25, 24: 26, 16: 27, 15: 28, 14: 29},
+    "N": {13: 1, 12: 2, 11: 3, 10: 4, 9: 5, 8: 6, 7: 7, 6: 8, 5: 9, 4: 10, 3: 11, 2: 12, 1: 13, 0: 14},
+}
 
 # ========================================================
-# 2. EJECUCIÓN CON CONDICIONALES INDEPENDIENTES
+# 2. ASIGNACIÓN AL DICCIONARIO BASE (mapa_numeros)
 # ========================================================
 mapa_numeros = {}
-MANZANAS_ESPIRAL_ESPECIAL = {"D", "F", "H"}
-ORDEN_MANZANA_LINEAL = {"A": "LR_T", "C": "LR_T", "E": "RL_T", "G": "LR_T", "J": "LR_T"}
 
 for manzana, casas_lista in casas_por_manzana.items():
-    if manzana == "SIN_MANZANA": continue
+    if manzana == "SIN_MANZANA":
+        continue
 
-    casas_ord = []
+    for casa in casas_lista:
+        id_detectado = casa['idx']
 
-    # --- CONDICIONAL MANZANA L (Casas 10 y 11) ---
-    if manzana == "L":
-        casas_ord = ordenar_perimetro(casas_lista, es_especial=False)
-        if len(casas_ord) >= 2:
-            # Swap de las últimas dos para corregir inversión
-            casas_ord[-1], casas_ord[-2] = casas_ord[-2], casas_ord[-1]
+        # Buscamos en el mapeo manual.
+        # Si no lo has definido aún, mostrará "ID-X" para que sepas qué ID falta mapear.
+        numero_final = MAPEO_MANUAL.get(manzana, {}).get(id_detectado, f"ID-{id_detectado}")
 
-    # --- CONDICIONAL MANZANAS I y K (Casas 11 y 12, modo especial) ---
-    elif manzana in ["I", "K"]:
-        casas_ord = ordenar_perimetro(casas_lista, es_especial=True)
-        if len(casas_ord) >= 2:
-            # Swap de las últimas dos de la lista corregida (sin tocar la casa 2)
-            casas_ord[-1], casas_ord[-2] = casas_ord[-2], casas_ord[-1]
+        # Llenamos mapa_numeros, que es la variable que usan las celdas siguientes
+        mapa_numeros[id_detectado] = numero_final
 
-    # --- RESTO DE MANZANAS ---
-    elif manzana in MANZANAS_ESPIRAL_ESPECIAL:
-        casas_ord = ordenar_perimetro(casas_lista, es_especial=True)
-    elif manzana == "B":
-        casas_ord = ordenar_rectangular(casas_lista)
-    else:
-        if manzana == "C":
-            filas = agrupar_en_filas(casas_lista, tolerancia=40)
-            casas_ord = sorted(filas[0], key=lambda c: c["cx"])
-        else:
-            modo = ORDEN_MANZANA_LINEAL.get(manzana, "LR_T")
-            casas_ord = ordenar_lineal(casas_lista, modo)
-
-    # ASIGNACIÓN FINAL
-    for n, casa in enumerate(casas_ord, start=1):
-        mapa_numeros[casa["idx"]] = n
-
-print(f"✅ mapa_numeros corregido: L (10-11), I y K (11-12) con casa 2 fija.")
+print(f"✅ mapa_numeros actualizado manualmente.")
+print("Recuerda completar el diccionario 'MAPEO_MANUAL' con los IDs que viste en amarillo.")
 
 debug = img.copy()
 
@@ -1296,7 +1254,7 @@ fg_tratos = folium.FeatureGroup(name="Avance Tratos", show=False)
 
 for grupo in [fg_fisico, fg_tratos]:
     # El plano se sigue dibujando en sus coordenadas originales [0,0] a [h,w]
-    folium.raster_layers.ImageOverlay(image='plano2.png', bounds=esquinas_plano, opacity=1, zindex=1).add_to(grupo)
+    folium.raster_layers.ImageOverlay(image='Plano Aguas Vivas.png', bounds=esquinas_plano, opacity=1, zindex=1).add_to(grupo)
 
 total_plata_obra = 0.0
 total_posible_obra = 0.0
