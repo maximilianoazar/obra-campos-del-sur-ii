@@ -871,7 +871,7 @@ dict_maestro_cuadrillas = {str(f[2]).strip(): str(f[0]).strip() for f in datos_c
 
 estado_tratos = {}
 cuadrillas_tratos = {}
-manzanas_a_procesar = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
+manzanas_a_procesar = ['H', 'I', 'J', 'K', 'L', 'M', 'N']
 
 for letra in manzanas_a_procesar:
     nombre_hoja = f"MZ {letra}"
