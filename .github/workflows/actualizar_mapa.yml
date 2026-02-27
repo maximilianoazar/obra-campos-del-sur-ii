@@ -48,6 +48,7 @@ jobs:
         
         # Copiamos los resultados del script
         cp obra_campos_del_sur_ii.html public/obra_campos_del_sur_ii.html || echo "No se generó el plano de la obra campos del sur II"
+        cp plano_aguas_vivas.html public/plano_aguas_vivas.html || echo "No se generó plano_aguas_vivas.html"
         cp plano2.png public/plano2.png || echo "No hay plano.png"
 
     - name: Publicar en GitHub Pages
